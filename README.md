@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # tranlator_v1
 
 A new Flutter project.
@@ -14,3 +15,6 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# TranslatorV1
+>>>>>>> 8b21a651d929bbc5b76c02743d3ef38f910e7e10
