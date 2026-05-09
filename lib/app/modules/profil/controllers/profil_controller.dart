@@ -17,54 +17,72 @@ class ProfilController extends GetxController {
   }
 
   void deleteProfile() {
-    Get.defaultDialog(
-      title: "Konfirmasi",
-      middleText: "Yakin mau hapus profil?",
-      textConfirm: "Ya",
-      textCancel: "Tidak",
-      onConfirm: () {
-        Get.back();
+  Get.defaultDialog(
+    title: "Konfirmasi",
+    middleText: "Yakin mau hapus profil?",
+    textConfirm: "Ya",
+    textCancel: "Tidak",
+    confirmTextColor: Colors.white, // Tambahan biar teks "Ya" kelihatan jelas
+    buttonColor: Colors.red, // Opsional: Karena ini aksi hapus, warna merah lebih intuitif
+    onConfirm: () {
+      // 1. Tutup dialognya terlebih dahulu
+      Get.back(); 
 
-        Get.back(result: true);
+      // 2. Munculkan pesan sukses
+      Get.snackbar(
+        "Berhasil",
+        "Akun berhasil dihapus",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.grey.withOpacity(0.1), // Opsional: Biar makin cakep
+        colorText: Colors.black,
+      );
 
-        Future.delayed(Duration(milliseconds: 50), () {
-          Get.snackbar(
-            "Berhasil",
-            "Akun berhasil dihapus",
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        });
-      },
-    );
-  }
+      // 3. Beri sedikit jeda agar user bisa baca snackbar, lalu pindah ke Login
+      Future.delayed(const Duration(milliseconds: 800), () {
+        goToLogin(); // Sudah ditambah titik koma
+      });
+    },
+  );
+}
 
   void ubahProfil() {
     Get.defaultDialog(
-      title: "Ubah Profil",
-      content: Padding(
-        padding: const EdgeInsets.all(15.0),
+      title: "Personal Information",
+      buttonColor: Colors.blue,
+      content: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white, width: 2)
+      ), 
+      padding: EdgeInsets.symmetric(horizontal: 20,),
+       
         child: Column(
           children: [
             TextField(
               onChanged: (value) => userprofil[0]['name'] = value,
-              decoration: InputDecoration(labelText: "Nama"),
+              
+              decoration: InputDecoration(labelText: "Name", hint: Text(userprofil[0]['name']!)),
             ),
             TextField(
               onChanged: (value) => userprofil[0]['email'] = value,
-              decoration: InputDecoration(labelText: "Email"),
+              decoration: InputDecoration(labelText: "Email", hint: Text(userprofil[0]['email']!)),
             ),
             TextField(
               onChanged: (value) => userprofil[0]['phone'] = value,
-              decoration: InputDecoration(labelText: "Telepon"),
+              decoration: InputDecoration(labelText: "Phone", hint: Text(userprofil[0]['phone']!)),
             ),
+            SizedBox(height: 20,)
           ],
         ),
       ),
-      textConfirm: "Simpan",
-      textCancel: "Batal",
+      textConfirm: "Save",
+      textCancel: "Cancel",
+
       onConfirm: () {
         Get.back();
-        Get.snackbar("Berhasil", "Profil berhasil diubah");
+        Get.snackbar("Successful", "Profile successfully updated", 
+        margin: EdgeInsets.only(top: 50) ,padding: EdgeInsets.all(30));
+        
       },
     );
   }
@@ -128,12 +146,53 @@ class ProfilController extends GetxController {
     );
   }
 
+  void ubahPassword() {
+    Get.defaultDialog(
+      title: "Ubah Password",
+      buttonColor: Colors.blue,
+      content: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white, width: 2)
+      ), 
+      padding: EdgeInsets.symmetric(horizontal: 20,),
+       
+        child: Column(
+          children: [
+            TextField(
+              onChanged: (value) => userprofil[0]['password'] = value,
+              decoration: InputDecoration(labelText: "Password Lama", hint: Text(userprofil[0]['password']!)),
+            ),
+            TextField(
+              onChanged: (value) => userprofil[0]['password'] = value,
+              decoration: InputDecoration(labelText: "Password Baru", ),
+            ),
+            TextField(
+              onChanged: (value) => userprofil[0]['password'] = value,
+              decoration: InputDecoration(labelText: "Konfirmasi Password" ),
+            ),
+            SizedBox(height: 20,)
+          ],
+        ),
+      ),
+      textConfirm: "Save",
+      textCancel: "Cancel",
+
+      onConfirm: () {
+        Get.back();
+        Get.snackbar("Berhasil", "Password berhasil diubah", 
+        margin: EdgeInsets.only(top: 50) ,padding: EdgeInsets.all(30));
+        
+      },
+    );
+  }
+
   final userprofil =[
     {
       'name': 'Rhiki Sulistiyo',
       'email': 'rhikisulistiyo@example.com',
       'phone': '0895339162828',
-
+      'password':'Admin123'
     }
   ].obs;
 
@@ -145,13 +204,29 @@ class ProfilController extends GetxController {
       'Time': '14.00 - 16.00'
     },
     {
-      'title': 'AI Ethics & The Future of Work: A Global Perspective',
-      'author': 'Dr. Rhiki',
-      'Date': 'Oct 19 2025',
+      'title': 'Machine Learning Implementation in Healthcare',
+      'author': 'Prof. Alan',
+       'Date': 'Oct 01 2025',
+       'Time': '11.00 - 13.00'
+    },
+    {
+      
+      'title': 'Building Accessible User Interfaces in 2026',
+      'author': 'Sarah Jane',
+      'Date': 'Oct 06 2025',
       'Time': '14.00 - 16.00'
-    }
+    },
+   
   ].obs;
- 
 
+ void goToLogin() {
+    Get.toNamed('/login');
+  }
+ void goToHistory() {
+    Get.toNamed('/history');
+  }
+ void goToTicket() {
+    Get.toNamed('/ticket');
+  }
  
 }

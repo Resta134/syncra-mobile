@@ -11,6 +11,16 @@ abstract class Routes {
   static const EVENTS = _Paths.EVENTS;
   static const HISTORY = _Paths.HISTORY;
   static const EVENT_DETAIL = _Paths.EVENT_DETAIL;
+  static const TICKET = _Paths.TICKET;
+  static const LIVE = _Paths.LIVE;
+  static const NOTIFIKASI = _Paths.NOTIFIKASI;
+  static const QA = _Paths.QA;
+  static const TRANSCRIPT = _Paths.TRANSCRIPT;
+  static const DASHBOARD_MOD = _Paths.DASHBOARD_MOD;
+  static const SPEAKER = _Paths.SPEAKER;
+  static const DASHBOARD_SPEAK = _Paths.DASHBOARD_SPEAK;
+  static const Q_A_SPEAK = _Paths.Q_A_SPEAK;
+  static const DASHBOARD_GATEKEEPER = _Paths.DASHBOARD_GATEKEEPER;
 }
 
 abstract class _Paths {
@@ -23,4 +33,14 @@ abstract class _Paths {
   static const EVENTS = '/events';
   static const HISTORY = '/history';
   static const EVENT_DETAIL = '/event-detail';
+  static const TICKET = '/ticket';
+  static const LIVE = '/live';
+  static const NOTIFIKASI = '/notifikasi';
+  static const QA = '/qa';
+  static const TRANSCRIPT = '/transcript';
+  static const DASHBOARD_MOD = '/dashboard-mod';
+  static const SPEAKER = '/speaker';
+  static const DASHBOARD_SPEAK = '/dashboard-speak';
+  static const Q_A_SPEAK = '/qa-speak';
+  static const DASHBOARD_GATEKEEPER = '/dashboard-gatekeeper';
 }

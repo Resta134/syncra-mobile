@@ -205,7 +205,7 @@ class RegisterView extends GetView<RegisterController> {
 
           // warna blur dipojok 
           Positioned(
-            top: 100,
+            top: 110,
             right: 50,
             child: Container(
               width: 120,
@@ -223,7 +223,7 @@ class RegisterView extends GetView<RegisterController> {
             ),
           ),
           Positioned(
-            bottom: 110,
+            bottom: 130,
             left: 50,
             child: Container(
               width: 120,

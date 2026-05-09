@@ -144,4 +144,5 @@ class EventsView extends GetView<EventsController> {
       ),
     );
   }
+
 }

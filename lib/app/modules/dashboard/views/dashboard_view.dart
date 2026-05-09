@@ -35,7 +35,7 @@ class DashboardView extends GetView<DashboardController> {
           Row(
             children: [
               IconButton(
-                onPressed: () => controller.goToHistory(),
+                onPressed: () => controller.goToNotifikasi(),
                 icon: Icon(
                   Icons.notifications_active,
                   color: Colors.blue[700],
@@ -300,10 +300,11 @@ class DashboardView extends GetView<DashboardController> {
   }
 
   // === DESAIN CARD  ==============
-  Widget _buildLiveCard(Map<String, String> data) {
+   Widget _buildLiveCard(Map<String, String> data) {
     return InkWell(
       onTap: () {
-        controller.goToEventDetail();
+        // LEMPAR VARIABEL 'data' KE DALAM KURUNG SINI
+        controller.goToEventDetail(data); 
       },
       child:  Container(
       width: 280,

@@ -48,6 +48,7 @@ class LoginView extends GetView<LoginController> {
 
                   TextFormField(
                     // controller: emailController,
+                     controller: controller.usernameC,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       prefixIcon: Icon(
@@ -215,7 +216,7 @@ class LoginView extends GetView<LoginController> {
 
           // warna blur dipojok 
           Positioned(
-            top: 90,
+            top: 110,
             right: 50,
             child: Container(
               width: 120,
@@ -233,7 +234,7 @@ class LoginView extends GetView<LoginController> {
             ),
           ),
           Positioned(
-            bottom: 100,
+            bottom: 130,
             left: 50,
             child: Container(
               width: 120,

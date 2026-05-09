@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:tranlator_v1/app/modules/event_detail/controllers/event_detail_controller.dart';
 
 class DashboardController extends GetxController {
   final liveStreamData = [
@@ -76,11 +77,17 @@ class DashboardController extends GetxController {
     print("Membuka halaman profil...");
     Get.toNamed('/profil');
   }
-
-  void goToEventDetail() {
-    print("Membuka halaman detail acara...");
-    Get.toNamed('/event-detail');
+  void goToNotifikasi() {
+    print("Membuka halaman profil...");
+    Get.toNamed('/notifikasi');
   }
+
+  void goToEventDetail(Map<String, String> data) {
+    print("Membuka halaman detail acara...");
+final detailController = Get.put(EventDetailController());
+  
+  // 2. Baru panggil fungsinya lewat variabel tersebut (huruf kecil depannya)
+  detailController.checkTicketStatus(data);  }
 
 
 }
