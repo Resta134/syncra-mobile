@@ -1,41 +1,51 @@
 import 'package:get/get.dart';
 
-import '../modules/QA/bindings/qa_binding.dart';
-import '../modules/QA/views/qa_view.dart';
-import '../modules/QA_speak/bindings/q_a_speak_binding.dart';
-import '../modules/QA_speak/views/q_a_speak_view.dart';
-import '../modules/dashboard/bindings/dashboard_binding.dart';
-import '../modules/dashboard/views/dashboard_view.dart';
-import '../modules/dashboard_gatekeeper/bindings/dashboard_gatekeeper_binding.dart';
-import '../modules/dashboard_gatekeeper/views/dashboard_gatekeeper_view.dart';
-import '../modules/dashboard_mod/bindings/dashboard_mod_binding.dart';
-import '../modules/dashboard_mod/views/dashboard_mod_view.dart';
-import '../modules/dashboard_speak/bindings/dashboard_speak_binding.dart';
-import '../modules/dashboard_speak/views/dashboard_speak_view.dart';
-import '../modules/event_detail/bindings/event_detail_binding.dart';
-import '../modules/event_detail/views/event_detail_view.dart';
-import '../modules/events/bindings/events_binding.dart';
-import '../modules/events/views/events_view.dart';
-import '../modules/history/bindings/history_binding.dart';
-import '../modules/history/views/history_view.dart';
-import '../modules/home/bindings/home_binding.dart';
-import '../modules/home/views/home_view.dart';
-import '../modules/live/bindings/live_binding.dart';
-import '../modules/live/views/live_view.dart';
-import '../modules/login/bindings/login_binding.dart';
-import '../modules/login/views/login_view.dart';
-import '../modules/notifikasi/bindings/notifikasi_binding.dart';
-import '../modules/notifikasi/views/notifikasi_view.dart';
-import '../modules/present_speak/bindings/present_speaker_binding.dart';
-import '../modules/present_speak/views/present_speaker_view.dart';
+import '../modules/auth/login/bindings/login_binding.dart';
+import '../modules/auth/login/views/login_view.dart';
+import '../modules/auth/register/bindings/register_binding.dart';
+import '../modules/auth/register/views/register_view.dart';
+import '../modules/user/facescanner/bindings/facescanner_binding.dart';
+import '../modules/user/facescanner/views/facescanner_view.dart';
+import '../modules/gatekeeper/dashboard_gatekeeper/bindings/dashboard_gatekeeper_binding.dart';
+import '../modules/gatekeeper/dashboard_gatekeeper/views/dashboard_gatekeeper_view.dart';
+import '../modules/gatekeeper/face_vertivication/bindings/face_vertivication_binding.dart';
+import '../modules/gatekeeper/face_vertivication/views/face_vertivication_view.dart';
+import '../modules/gatekeeper/qr_scanner/bindings/qr_scanner_binding.dart';
+import '../modules/gatekeeper/qr_scanner/views/qr_scanner_view.dart';
+import '../modules/gatekeeper/user_validation/bindings/user_validation_binding.dart';
+import '../modules/gatekeeper/user_validation/views/user_validation_view.dart';
+import '../modules/moderator/QA/bindings/qa_binding.dart';
+import '../modules/moderator/QA/views/qa_view.dart';
+import '../modules/moderator/dashboard_mod/bindings/dashboard_mod_binding.dart';
+import '../modules/moderator/dashboard_mod/views/dashboard_mod_view.dart';
+import '../modules/moderator/transcript/bindings/transcript_binding.dart';
+import '../modules/moderator/transcript/views/transcript_view.dart';
+import '../modules/user/payment/bindings/payment_binding.dart';
+import '../modules/user/payment/views/payment_view.dart';
 import '../modules/profil/bindings/profil_binding.dart';
 import '../modules/profil/views/profil_view.dart';
-import '../modules/register/bindings/register_binding.dart';
-import '../modules/register/views/register_view.dart';
-import '../modules/ticket/bindings/ticket_binding.dart';
-import '../modules/ticket/views/ticket_view.dart';
-import '../modules/transcript/bindings/transcript_binding.dart';
-import '../modules/transcript/views/transcript_view.dart';
+import '../modules/speaker/QA_speak/bindings/q_a_speak_binding.dart';
+import '../modules/speaker/QA_speak/views/q_a_speak_view.dart';
+import '../modules/speaker/dashboard_speak/bindings/dashboard_speak_binding.dart';
+import '../modules/speaker/dashboard_speak/views/dashboard_speak_view.dart';
+import '../modules/speaker/present_speak/bindings/present_speaker_binding.dart';
+import '../modules/speaker/present_speak/views/present_speaker_view.dart';
+import '../modules/user/dashboard/bindings/dashboard_binding.dart';
+import '../modules/user/dashboard/views/dashboard_view.dart';
+import '../modules/user/event_detail/bindings/event_detail_binding.dart';
+import '../modules/user/event_detail/views/event_detail_view.dart';
+import '../modules/user/events/bindings/events_binding.dart';
+import '../modules/user/events/views/events_view.dart';
+import '../modules/user/faceregistration/bindings/faceregistration_binding.dart';
+import '../modules/user/faceregistration/views/faceregistration_view.dart';
+import '../modules/user/history/bindings/history_binding.dart';
+import '../modules/user/history/views/history_view.dart';
+import '../modules/user/live/bindings/live_binding.dart';
+import '../modules/user/live/views/live_view.dart';
+import '../modules/user/notifikasi/bindings/notifikasi_binding.dart';
+import '../modules/user/notifikasi/views/notifikasi_view.dart';
+import '../modules/user/ticket/bindings/ticket_binding.dart';
+import '../modules/user/ticket/views/ticket_view.dart';
 
 part 'app_routes.dart';
 
@@ -45,11 +55,7 @@ class AppPages {
   static const INITIAL = Routes.LOGIN;
 
   static final routes = [
-    GetPage(
-      name: _Paths.HOME,
-      page: () => const HomeView(),
-      binding: HomeBinding(),
-    ),
+   
     GetPage(
       name: _Paths.PROFIL,
       page: () => const ProfilView(),
@@ -134,6 +140,43 @@ class AppPages {
       name: _Paths.DASHBOARD_GATEKEEPER,
       page: () => const DashboardGatekeeperView(),
       binding: DashboardGatekeeperBinding(),
+    ),
+    GetPage(
+      name: _Paths.USER_VALIDATION,
+      page: () => const UserValidationView(),
+      binding: UserValidationBinding(),
+    ),
+    GetPage(
+      name: _Paths.FACE_VERTIVICATION,
+      page: () => const FaceVertivicationView(),
+      binding: FaceVertivicationBinding(),
+    ),
+    GetPage(
+      name: _Paths.QR_SCANNER,
+      page: () => const QrScannerView(),
+      binding: QrScannerBinding(),
+    ),
+    GetPage(
+      name: _Paths.PAYMENT,
+      page: () => const PaymentView(),
+      binding: PaymentBinding(),
+    ),
+    GetPage(
+      name: _Paths.FACEREGISTRATION,
+      page: () => const FaceregistrationView(),
+      binding: FaceregistrationBinding(),
+    ),
+    GetPage(
+      name: _Paths.FACESCANNER,
+      page: () => const FacescannerView(),
+      binding: FacescannerBinding(),
+      children: [
+        GetPage(
+          name: _Paths.FACESCANNER,
+          page: () => const FacescannerView(),
+          binding: FacescannerBinding(),
+        ),
+      ],
     ),
   ];
 }

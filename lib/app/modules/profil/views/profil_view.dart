@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
 import '../controllers/profil_controller.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class ProfilView extends GetView<ProfilController> {
   const ProfilView({super.key});
   @override
   Widget build(BuildContext context) {
+    final args = Get.arguments as Map<String, dynamic>?;
+    final currentRole = args?['role'] ?? 'user';
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text("Profil", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
         centerTitle: true,
@@ -43,7 +49,7 @@ class ProfilView extends GetView<ProfilController> {
                         ),
                       ),
 
-                      // ====== PROFIL 
+                      // ====== PROFIL
                       Align(
                         alignment: Alignment.center,
                         child: Column(
@@ -113,89 +119,6 @@ class ProfilView extends GetView<ProfilController> {
                   ),
                   SizedBox(height: 30),
 
-                  // ---------- BUTTON TICKET & HISTORY
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => controller.goToTicket(),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 60,
-                          ),
-                          elevation: 5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[200],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.confirmation_num_outlined,
-                                size: 30,
-                                color: Colors.black,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              'My Tickets',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      ElevatedButton(
-                        onPressed: () => controller.goToHistory(),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 60,
-                          ),
-                          elevation: 5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[200],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.history_outlined,
-                                size: 30,
-                                color: Colors.black,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              'Event History',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-
                   // ------------- DATA USER
                   Padding(
                     padding: EdgeInsets.all(15.0),
@@ -263,7 +186,26 @@ class ProfilView extends GetView<ProfilController> {
                       ],
                     ),
                   ),
+                  SizedBox(
+                    height: 45,
+                    width: 460,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[900],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => controller.ubahProfil(),
+                      icon: Icon(Icons.edit, color: Colors.white),
+                      label: Text(
+                        "Edit Profil",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
 
+                  SizedBox(height: 30),
                   // -------------- SETTING & BIOMETRIC
                   Padding(
                     padding: EdgeInsets.all(15.0),
@@ -302,11 +244,23 @@ class ProfilView extends GetView<ProfilController> {
                                   onTap: () {},
                                   child: ListTile(
                                     leading: Icon(
-                                      Icons.fingerprint,
+                                      MdiIcons.faceRecognition,
                                       color: Colors.blue,
                                     ),
-                                    title: Text("Biometric"),
+                                    title: Text("Face Recognation"),
                                     subtitle: Text('Belum Terverifikasi'),
+                                  ),
+                                ),
+                                Divider(),
+                                InkWell(
+                                  onTap: () {},
+                                  child: ListTile(
+                                    leading: Icon(
+                                      Icons.language_sharp,
+                                      color: Colors.blue,
+                                    ),
+                                    title: Text("Change Language"),
+                                    subtitle: Text('English'),
                                   ),
                                 ),
                               ],
@@ -317,56 +271,8 @@ class ProfilView extends GetView<ProfilController> {
                     ),
                   ),
                   SizedBox(
-                    height: 20,
-                  ), // Jarak ekstra biar pas di-scroll mentok bawah ga nabrak
-                ],
-              ),
-            ),
-          ),
-
-          Container(
-            padding: EdgeInsets.only(top: 20, bottom: 24, left: 20, right: 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: Offset(0, -5), // Bayangan ke arah atas
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize:
-                    MainAxisSize.min, // Biar ngambil tinggi secukupnya aja
-                children: [
-                  // BUTTON UBAH ==================================================
-                  SizedBox(
                     height: 45,
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () => controller.ubahProfil(),
-                      icon: Icon(Icons.edit, color: Colors.white),
-                      label: Text(
-                        "Edit Profil",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-
-                  // BUTTON HAPUS / SIGN OUT ======================================
-                  SizedBox(
-                    height: 45,
-                    width: double.infinity,
+                    width: 460,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -383,11 +289,61 @@ class ProfilView extends GetView<ProfilController> {
                       ),
                     ),
                   ),
+
+                  SizedBox(height: 20),
                 ],
               ),
             ),
           ),
         ],
+      ),
+
+      // =================================================================
+      // BOTTOM NAVIGATION BAR (UI/UX Profesional)
+      // =================================================================
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 2,
+        role: currentRole, // <-- Mengikuti role asli user yang sedang aktif
+      ),
+    );
+  }
+
+  // Helper untuk membuat struktur tombol Bottom Navigation yang konsisten
+  Widget _buildNavTab({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 4,
+        ), // Memperluas area klik jempol
+        child: Column(
+          mainAxisSize:
+              MainAxisSize.min, // Pastikan tidak memakan tinggi berlebih
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              // Kontras warna: Biru pekat untuk aktif, abu-abu redup untuk tidak aktif
+              color: isActive ? Colors.blue.shade700 : Colors.grey.shade400,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? Colors.blue.shade700 : Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

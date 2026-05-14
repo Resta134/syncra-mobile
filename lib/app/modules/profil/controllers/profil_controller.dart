@@ -48,7 +48,7 @@ class ProfilController extends GetxController {
   void ubahProfil() {
     Get.defaultDialog(
       title: "Personal Information",
-      buttonColor: Colors.blue,
+      buttonColor: Colors.blue[900],
       content: Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
@@ -149,7 +149,7 @@ class ProfilController extends GetxController {
   void ubahPassword() {
     Get.defaultDialog(
       title: "Ubah Password",
-      buttonColor: Colors.blue,
+      buttonColor: Colors.blue[900],
       content: Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
@@ -222,8 +222,8 @@ class ProfilController extends GetxController {
  void goToLogin() {
     Get.toNamed('/login');
   }
- void goToHistory() {
-    Get.toNamed('/history');
+ void goToDashboard() {
+    Get.toNamed('/dashboard');
   }
  void goToTicket() {
     Get.toNamed('/ticket');

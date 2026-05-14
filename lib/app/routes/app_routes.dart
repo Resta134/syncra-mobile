@@ -21,6 +21,12 @@ abstract class Routes {
   static const DASHBOARD_SPEAK = _Paths.DASHBOARD_SPEAK;
   static const Q_A_SPEAK = _Paths.Q_A_SPEAK;
   static const DASHBOARD_GATEKEEPER = _Paths.DASHBOARD_GATEKEEPER;
+  static const USER_VALIDATION = _Paths.USER_VALIDATION;
+  static const FACE_VERTIVICATION = _Paths.FACE_VERTIVICATION;
+  static const QR_SCANNER = _Paths.QR_SCANNER;
+  static const PAYMENT = _Paths.PAYMENT;
+  static const FACEREGISTRATION = _Paths.FACEREGISTRATION;
+  static const FACESCANNER = _Paths.FACESCANNER;
 }
 
 abstract class _Paths {
@@ -43,4 +49,10 @@ abstract class _Paths {
   static const DASHBOARD_SPEAK = '/dashboard-speak';
   static const Q_A_SPEAK = '/qa-speak';
   static const DASHBOARD_GATEKEEPER = '/dashboard-gatekeeper';
+  static const USER_VALIDATION = '/user-validation';
+  static const FACE_VERTIVICATION = '/face-vertivication';
+  static const QR_SCANNER = '/qr-scanner';
+  static const PAYMENT = '/payment';
+  static const FACEREGISTRATION = '/faceregistration';
+  static const FACESCANNER = '/facescanner';
 }
