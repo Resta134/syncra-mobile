@@ -212,7 +212,6 @@ class EventsView extends GetView<EventsController> {
                         radius: 10,
                         backgroundColor:
                             Colors.orange.shade100,
-
                         child: const Icon(
                           Icons.location_on_outlined,
                           size: 14,
