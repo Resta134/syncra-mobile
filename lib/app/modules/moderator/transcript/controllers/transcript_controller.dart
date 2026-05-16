@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class TranscriptController extends GetxController {
@@ -127,4 +128,48 @@ class TranscriptController extends GetxController {
     'role': 'speaker',
   },
 ].obs;
+
+void EditTranskrip() {
+  final TextEditingController transkripC = TextEditingController();
+
+  Get.defaultDialog(
+    title: "Edit Transkrip",
+    radius: 12,
+    content: Column(
+      children: [
+        TextField(
+          controller: transkripC,
+          maxLines: 5,
+          decoration: InputDecoration(
+            hintText: "Masukkan transkrip...",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+
+        SizedBox(height: 16),
+
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              final hasil = transkripC.text;
+
+              print(hasil);
+
+              Get.back();
+
+              Get.snackbar(
+                "Berhasil",
+                "Transkrip berhasil diperbarui",
+              );
+            },
+            child: Text("Simpan"),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

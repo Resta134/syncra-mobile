@@ -185,7 +185,7 @@ class DashboardView extends GetView<DashboardController> {
   Widget _buildLiveCard(Map<String, String> data) {
     return InkWell(
       onTap: () {
-        controller.goToTicket();
+        controller.goToLive();
       },
       child: Container(
         width: 280,

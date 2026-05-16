@@ -120,76 +120,14 @@ class LoginView extends GetView<LoginController> {
                   SizedBox(height: 20),
 
                   // ----------- divider -----------
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(thickness: 1, color: Colors.grey[400]),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text('or continue with'),
-                      ),
-                      Expanded(
-                        child: Divider(thickness: 1, color: Colors.grey[400]),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-
-                  // ----------- google  -----------
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('images/googleSymbol.png', height: 25),
-                        SizedBox(width: 20),
-                        Text('Sign in with Google'),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      // elevation: 5,
-                      // shadowColor: Colors.grey[300],
-                    ),
-                  ),
-                  SizedBox(height: 15),
-
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.fingerprint, size: 30, color: Colors.blue[900]),
-                        SizedBox(width: 10),
-                        Text('Log in with Biometric'),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      // elevation: 5,
-                      // shadowColor: Colors.grey[300],
-                    ),
-                  ),
+                
                   SizedBox(height: 10),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account?',
+                        'Don’t have an account?',
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                       TextButton(

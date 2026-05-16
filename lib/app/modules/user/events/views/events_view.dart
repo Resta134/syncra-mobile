@@ -26,46 +26,44 @@ class EventsView extends GetView<EventsController> {
           onPressed: () => Get.back(),
         ),
       ),
- body: Column(
-  children: [
-    Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 30.0,
-        vertical: 8.0,
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: "Search for events",
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: const Icon(Icons.translate),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 30.0,
+              vertical: 8.0,
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Search for events",
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: const Icon(Icons.translate),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
-    ),
 
-    Expanded(
-      child: Obx(
-        () => ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount:
-              controller.upcomingEventsData.length,
-          itemBuilder: (context, index) {
-            final data =
-                controller.upcomingEventsData[index];
+          Expanded(
+            child: Obx(
+              () => ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: controller.upcomingEventsData.length,
+                itemBuilder: (context, index) {
+                  final data = controller.upcomingEventsData[index];
 
-            return _buildUpcomingCard(data);
-          },
-        ),
+                  return _buildUpcomingCard(data);
+                },
+              ),
+            ),
+          ),
+        ],
       ),
-    ),
-  ],
-),
-);
+    );
   }
 
- Widget _buildUpcomingCard(Map<String, String> data) {
+  Widget _buildUpcomingCard(Map<String, String> data) {
     return InkWell(
       onTap: () {
         controller.goToEventDetail();
@@ -78,10 +76,7 @@ class EventsView extends GetView<EventsController> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.grey.shade200,
-          ),
-
+          border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.shade200,
@@ -97,7 +92,6 @@ class EventsView extends GetView<EventsController> {
             // IMAGE
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-
               child: Image.asset(
                 data['thumbnail'] ?? 'images/profil.png',
                 width: 90,
@@ -111,45 +105,26 @@ class EventsView extends GetView<EventsController> {
             // CONTENT
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // TIME + TAG
                   Row(
                     children: [
-                      Text(
-                        data['time'] ?? 'No Time',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                      Expanded(
+                        child: Text(
+                          data['time'] ?? 'No Time',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
 
                       const SizedBox(width: 8),
 
-                      Container(
-                        padding:
-                            const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius:
-                              BorderRadius.circular(6),
-                        ),
-
-                        child: Text(
-                          data['tag'] ?? 'EVENT',
-                          style: TextStyle(
-                            color: Colors.blue.shade900,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
 
@@ -157,75 +132,78 @@ class EventsView extends GetView<EventsController> {
 
                   // TITLE
                   Text(
-                    data['titleupcoming'] ??
-                        'No Title',
-
+                    data['titleupcoming'] ?? 'No Title',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
-
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
 
                   const SizedBox(height: 12),
 
-                  // AUTHOR + LOCATION
                   Row(
                     children: [
+                      // Avatar Author Pertama
                       CircleAvatar(
                         radius: 10,
-                        backgroundColor:
-                            Colors.blue.shade100,
-
+                        backgroundColor: Colors.blue[100],
                         child: const Icon(
                           Icons.person,
-                          size: 14,
+                          size: 15,
                           color: Colors.blue,
                         ),
                       ),
 
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
 
+                      // Nama Author (Diganti pakai ?? biar ga crash)
                       Expanded(
-                        child: Text(
-                          data['authorUp'] ??
-                              'Unknown Speaker',
+                        child: Row(
+                          children: [
+                            Text(
+                              data['authorUp']!,
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              '|',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: Colors.blue[100],
+                                  child: const Icon(
+                                    Icons.location_on_outlined,
+                                    size: 15,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                SizedBox(width: 5),
 
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                            fontSize: 12,
-                          ),
-
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor:
-                            Colors.orange.shade100,
-                        child: const Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: Colors.orange,
-                        ),
-                      ),
-
-                      const SizedBox(width: 6),
-
-                      Text(
-                        data['location'] ?? 'Unknown',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 12,
+                                Text(
+                                  data['location']!,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade700,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],

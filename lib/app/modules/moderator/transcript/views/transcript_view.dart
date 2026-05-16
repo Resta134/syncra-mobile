@@ -189,7 +189,9 @@ class TranscriptView extends GetView<TranscriptController> {
                                                     ],
                                                   ),
                                                   InkWell(
-                                                    onTap: () {},
+                                                    onTap: () {
+                                                      controller.EditTranskrip();
+                                                    },
                                                     child: Icon(
                                                       Icons.edit,
                                                       size: 20,

@@ -102,4 +102,7 @@ class DashboardController extends GetxController {
     // 2. Baru panggil fungsinya lewat variabel tersebut (huruf kecil depannya)
     detailController.checkTicketStatus(data);
   }
+  void goToLive(){
+    Get.toNamed('/live');
+  }
 }

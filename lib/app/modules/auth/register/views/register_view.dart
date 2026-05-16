@@ -19,7 +19,7 @@ class RegisterView extends GetView<RegisterController> {
               height: 585,
               width: 300,
               decoration: BoxDecoration(
-                color: Colors.white, 
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -88,7 +88,7 @@ class RegisterView extends GetView<RegisterController> {
                   SizedBox(height: 16),
 
                   TextFormField(
-                    // controller: passwordController,
+                    controller: controller.passwordC,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -115,7 +115,9 @@ class RegisterView extends GetView<RegisterController> {
 
                   // ----------- sign up -----------
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      controller.goRegisterSuccess();
+                    },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -134,48 +136,6 @@ class RegisterView extends GetView<RegisterController> {
                     ),
                   ),
                   SizedBox(height: 20),
-
-                  // ----------- divider -----------
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(thickness: 1, color: Colors.grey[400]),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text('or continue with'),
-                      ),
-                      Expanded(
-                        child: Divider(thickness: 1, color: Colors.grey[400]),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-
-                  // ----------- google  -----------
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('images/googleSymbol.png', height: 24),
-                        SizedBox(width: 10),
-                        Text('Sign in with Google'),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      // elevation: 5,
-                      // shadowColor: Colors.grey[300],
-                    ),
-                  ),
-                  SizedBox(height: 10),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -203,7 +163,7 @@ class RegisterView extends GetView<RegisterController> {
             ),
           ),
 
-          // warna blur dipojok 
+          // warna blur dipojok
           Positioned(
             top: 110,
             right: 50,
