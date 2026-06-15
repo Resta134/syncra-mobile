@@ -1,38 +1,46 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-
 import '../controllers/payment_controller.dart';
 
 class PaymentView extends GetView<PaymentController> {
-const PaymentView({super.key});
+  const PaymentView({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Payment')),
+      backgroundColor: Colors.grey[50], // Background Neumorphism
+      appBar: AppBar(
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        centerTitle: true,
+        title: const Text('Pembayaran', style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 18)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B), size: 20),
+          onPressed: () => Get.back(),
+        ),
+      ),
       body: SingleChildScrollView(
-        // Menggunakan padding global agar tidak perlu repot set padding di tiap widget
-        padding: EdgeInsets.all(16.0),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // --- 1. CARD TOTAL PEMBAYARAN ---
             Container(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                // Menggunakan gradient agar terkesan premium (opsional, bisa diganti warna solid)
+                borderRadius: BorderRadius.circular(20),
                 gradient: LinearGradient(
-                  colors: [Colors.blue.shade800, Colors.blue.shade600],
+                  colors: [Colors.blue.shade800, Colors.blue.shade500],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.blue.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -40,71 +48,61 @@ const PaymentView({super.key});
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Total Payment', // Diubah dari 'Count Payment' agar gramatikalnya pas
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
+                    'Total Pembayaran', 
+                    style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    // Misal: "Rp 150.000"
-                    controller.countPayment['count'] ?? 'Rp 0',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    controller.eventPrice, // Memanggil harga dinamis dari controller
+                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1),
                   ),
+                  const SizedBox(height: 15),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                    child: Text(
+                      controller.eventData['title'] ?? 'Event',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
                 ],
               ),
             ),
-
-            SizedBox(height: 30),
+            const SizedBox(height: 35),
 
             // --- 2. HEADER METODE PEMBAYARAN ---
             Row(
               children: [
-                Icon(
-                  MdiIcons.walletOutline, // Ikon dompet jauh lebih pas
-                  color: Colors.blue.shade700,
-                  size: 24,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  'Select Payment Method',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                Icon(MdiIcons.walletOutline, color: Colors.blue.shade700, size: 24),
+                const SizedBox(width: 10),
+                const Text('Pilih Metode Pembayaran', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
               ],
             ),
-            SizedBox(height: 12),
-            Divider(),
-            SizedBox(height: 12),
+            const SizedBox(height: 16),
 
             // --- 3. LIST METODE PEMBAYARAN ---
-
-            // Opsi A: QRIS
             _buildPaymentOption(
+              methodId: 'QRIS',
               icon: Icons.qr_code_2_rounded,
               title: 'QRIS',
-              subtitle: 'Scan instantly with any banking app',
+              subtitle: 'Scan cepat dari m-banking atau e-wallet',
               iconColor: Colors.orange.shade700,
               bgColor: Colors.orange.shade50,
             ),
-            SizedBox(height: 12),
-
-            // Opsi B: Transfer Bank (Virtual Account)
+            const SizedBox(height: 12),
             _buildPaymentOption(
+              methodId: 'VA',
               icon: MdiIcons.bankOutline,
-              title: 'Bank Transfer (VA)',
+              title: 'Transfer Bank (VA)',
               subtitle: 'BCA, Mandiri, BRI, BNI',
               iconColor: Colors.blue.shade700,
               bgColor: Colors.blue.shade50,
             ),
-            SizedBox(height: 12),
-
-            // Opsi C: E-Wallet
+            const SizedBox(height: 12),
             _buildPaymentOption(
+              methodId: 'EWALLET',
               icon: MdiIcons.cellphoneNfc,
               title: 'E-Wallet',
               subtitle: 'GoPay, OVO, DANA, ShopeePay',
@@ -114,96 +112,94 @@ const PaymentView({super.key});
           ],
         ),
       ),
-        bottomSheet: SafeArea(
-        child: Padding(
-          padding:  EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            margin: EdgeInsets.only(bottom: 20),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-            ),
+      
+      // --- 4. TOMBOL BAYAR BAWAH ---
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.only(left: 24, right: 24, top: 15, bottom: 35),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.blueGrey.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, -5))],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            height: 55,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: EdgeInsets.all(15)
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                elevation: 0,
               ),
-              onPressed: () {
-                controller.processSuccessPayment();
-              },
-              child: Row(
+              onPressed: () => controller.processSuccessPayment(),
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Icon(Icons.confirmation_num_outlined, color: Colors.white,size: 20,),
-                   SizedBox(width: 5,),
-                  Text('Buy Now',style: TextStyle(color: Colors.white, fontSize: 18),),
+                  Icon(Icons.lock_outline_rounded, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text('Bayar Sekarang', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
           ),
         ),
       ),
-   
     );
   }
 
-  // Helper untuk membuat tombol opsi pembayaran yang seragam
+  // Helper untuk membuat opsi pembayaran yang bisa dipilih (Interaktif)
   Widget _buildPaymentOption({
+    required String methodId,
     required IconData icon,
     required String title,
     required String subtitle,
     required Color iconColor,
     required Color bgColor,
   }) {
-    return InkWell(
-      onTap: () {
-        
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-          color: Colors.white, // Latar belakang utama item
-        ),
-        child: Row(
-          children: [
-            // Ikon dengan background warna lembut
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(10),
+    return Obx(() {
+      final isSelected = controller.selectedMethod.value == methodId;
+      
+      return InkWell(
+        onTap: () => controller.selectMethod(methodId),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isSelected ? Colors.blueAccent : Colors.grey.shade200, width: isSelected ? 2 : 1),
+            color: isSelected ? Colors.blue.shade50.withOpacity(0.5) : Colors.white,
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: iconColor, size: 26),
               ),
-              child: Icon(icon, color: iconColor, size: 28),
-            ),
-            SizedBox(width: 16),
-            // Teks Judul & Subjudul
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                    const SizedBox(height: 4),
+                    Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                  ],
+                ),
               ),
-            ),
-            // Indikator panah ke kanan
-            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
-          ],
+              // Radio Button Visual
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: isSelected ? Colors.blueAccent : Colors.grey.shade300, width: 2),
+                ),
+                child: isSelected ? Center(child: Container(width: 10, height: 10, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.blueAccent))) : null,
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

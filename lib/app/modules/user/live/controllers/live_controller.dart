@@ -1,55 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LiveController extends GetxController {
+  final SupabaseClient _supabase = Supabase.instance.client;
+
   // =========================================
-  // 1. KONTROL TAB (Community & My Question)
+  // STATE & CONTROLLER UI
   // =========================================
   final selectedTab = 0.obs;
   late PageController pageController;
+  final questionController = TextEditingController();
 
   final isPlaying = true.obs;
   final playbackSpeed = 1.0.obs;
 
-
-  final communityQuestions = [
-    {
-      'initial': 'RS',
-      'name': 'Rhiki Sulistiyo',
-      'time': '10:24 AM',
-      'text': 'Bagaimana cara AI menangani dialek lokal yang sulit diterjemahkan secara akurat?'
-    },
-    {
-      'initial': 'AL',
-      'name': 'Alan',
-      'time': '10:26 AM',
-      'text': 'Sesi Tanya Jawab akan dimulai, silahkan ajukan pertanyaanmu jangan malu-malu yaa'
-    },
-  ].obs;
-
-  // Daftar Pertanyaan Saya
-  final myQuestions = [
-    {
-      'initial': 'RS', // Sesuai nama lu
-      'name': 'Rhiki Sulistiyo',
-      'time': '10:24 AM',
-      'text': 'Bagaimana cara AI menangani dialek lokal yang sulit diterjemahkan secara akurat?'
-    },
-  ].obs;
-  
-
-
-  // Controller untuk text input (Tanya Pembicara)
-  final questionController = TextEditingController();
-
-
   // =========================================
-  // INIT & DISPOSE (Wajib buat PageController)
+  // DATA REAL-TIME (DARI SUPABASE)
   // =========================================
+  final communityQuestions = <Map<String, dynamic>>[].obs;
+  final myQuestions = <Map<String, dynamic>>[].obs;
+  final transcripts = <Map<String, dynamic>>[].obs; // <-- Untuk Subtitle Terjemahan
+
+  // Variabel Sesi
+  late String eventId;
+  String? userId;
+  String userName = 'User Syncra';
+  String userInitial = 'U';
+
   @override
   void onInit() {
     super.onInit();
     pageController = PageController(initialPage: 0);
+    
+    // 1. Ambil Data User Saat Ini
+    _getUserData();
+
+    // 2. Tangkap ID Event dari halaman sebelumnya
+    final eventData = Get.arguments;
+    if (eventData != null && eventData['id'] != null) {
+      eventId = eventData['id'];
+      
+      // 3. Mulai dengarkan database secara LIVE!
+      _listenToQuestions();
+      _listenToTranscripts();
+    } else {
+      Get.snackbar('Error', 'Sesi Live tidak valid.', backgroundColor: Colors.red.withOpacity(0.1));
+    }
   }
 
   @override
@@ -59,22 +56,128 @@ class LiveController extends GetxController {
     super.onClose();
   }
 
+  // =========================================
+  // FUNGSI INISIALISASI & REAL-TIME STREAMS
+  // =========================================
+  
+  void _getUserData() {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      userId = user.id;
+      userName = user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Peserta Syncra';
+      
+      // Ambil 2 huruf pertama untuk avatar (misal: Resta Sabrina -> RS)
+      List<String> nameParts = userName.split(' ');
+      if (nameParts.length > 1) {
+        userInitial = '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
+      } else if (nameParts.isNotEmpty && nameParts[0].isNotEmpty) {
+        userInitial = nameParts[0].substring(0, min(2, nameParts[0].length)).toUpperCase();
+      }
+    }
+  }
+
+  // Mendengarkan Tabel Questions secara Real-time
+  void _listenToQuestions() {
+    _supabase
+        .from('questions')
+        .stream(primaryKey: ['id'])
+        .eq('event_id', eventId)
+        .order('created_at', ascending: false) // Yang terbaru di atas
+        .listen((List<Map<String, dynamic>> data) {
+          
+      final List<Map<String, dynamic>> community = [];
+      final List<Map<String, dynamic>> mine = [];
+
+      for (var row in data) {
+        // Format jam (Contoh: 10:24)
+        DateTime createdAt = DateTime.parse(row['created_at']).toLocal();
+        String timeStr = '${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+
+        // Tentukan nama pengirim (Jika ini pertanyaan kita, pakai nama kita)
+        bool isMyQuestion = row['user_id'] == userId;
+        String senderName = isMyQuestion ? userName : 'Peserta Acara';
+        String initial = isMyQuestion ? userInitial : 'P';
+
+        Map<String, dynamic> questionData = {
+          'id': row['id'],
+          'initial': initial,
+          'name': senderName,
+          'time': timeStr,
+          'text': row['text'],
+          'status': row['status'],
+        };
+
+        // Pisahkan ke tab masing-masing
+        if (isMyQuestion) {
+          mine.add(questionData);
+        }
+        
+        // Hanya munculkan di komunitas jika statusnya sudah di-approve Admin
+        if (row['status'] == 'approved') {
+          community.add(questionData);
+        }
+      }
+
+      communityQuestions.value = community;
+      myQuestions.value = mine;
+    });
+  }
+
+  // Mendengarkan Tabel Transcripts secara Real-time
+  void _listenToTranscripts() {
+    _supabase
+        .from('transcripts')
+        .stream(primaryKey: ['id'])
+        .eq('event_id', eventId)
+        .order('created_at', ascending: true) // Teks mengalir dari atas ke bawah
+        .listen((List<Map<String, dynamic>> data) {
+      transcripts.value = data;
+    });
+  }
 
   // =========================================
   // FUNGSI - FUNGSI AKSI (ACTIONS)
   // =========================================
+
+  // Fungsi kirim pertanyaan ke Database
+  Future<void> sendQuestion() async {
+    final text = questionController.text.trim();
+    if (text.isEmpty || userId == null) return;
+
+    // Supaya UI terasa responsif, kita kosongkan dulu formnya
+    questionController.clear(); 
+    
+    try {
+      await _supabase.from('questions').insert({
+        'event_id': eventId,
+        'user_id': userId,
+        'text': text,
+        'status': 'pending', // Menunggu persetujuan moderator
+      });
+
+      Get.snackbar(
+        'Terkirim',
+        'Pertanyaan sedang di-review oleh Moderator.',
+        backgroundColor: Colors.green.withOpacity(0.1),
+        colorText: Colors.green[800],
+        snackPosition: SnackPosition.TOP,
+      );
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal mengirim pertanyaan: $e', backgroundColor: Colors.red.withOpacity(0.1));
+    }
+  }
 
   // Fungsi pindah tab Q&A
   void switchTab(int index) {
     selectedTab.value = index;
     pageController.animateToPage(
       index,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
 
-  // Fungsi play/pause audio
+  // Fungsi play/pause audio AI
   void togglePlay() {
     isPlaying.value = !isPlaying.value;
     Get.snackbar(
@@ -85,7 +188,7 @@ class LiveController extends GetxController {
     );
   }
 
-  // Fungsi ubah speed audio
+  // Fungsi ubah speed audio AI
   void changeSpeed() {
     if (playbackSpeed.value == 1.0) {
       playbackSpeed.value = 1.25;
@@ -106,30 +209,5 @@ class LiveController extends GetxController {
     );
   }
 
-  // Fungsi kirim pertanyaan
-  void sendQuestion() {
-    if (questionController.text.trim().isEmpty) {
-      return; // Kalau teks kosong, ga usah ngapa-ngapain
-    }
-
-    // Nambahin teks ke list "My Question" secara lokal (simulasi)
-    myQuestions.add({
-      'initial': 'RS',
-      'name': 'Rhiki Sulistiyo',
-      'role': 'Peserta',
-      'time': 'Just Now',
-      'text': questionController.text,
-    });
-
-    questionController.clear(); // Bersihin kolom input
-
-    // Kasih notif sukses
-    Get.snackbar(
-      'Terkirim',
-      'Pertanyaan sedang di-review oleh Moderator.',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
-    );
-  }
+  int min(int a, int b) => a < b ? a : b; // Helper matematika sederhana
 }

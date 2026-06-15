@@ -1,112 +1,91 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
-
 import '../controllers/user_validation_controller.dart';
 
 class UserValidationView extends GetView<UserValidationController> {
   const UserValidationView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: const Color(0xFFF1F5F9), // Mengikuti tema Dashboard Gatekeeper
       appBar: AppBar(
-        automaticallyImplyLeading: false,//hapus arrow
-        backgroundColor: Colors.blue.shade900,
-        title: Text(
-          'Title Events',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
         ),
+        title: const Text('Validasi Peserta', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          SizedBox(height: 20),
-
-          PreferredSize(
-            preferredSize: Size.fromHeight(60),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: TextField(
-                onChanged: (value) => controller.searchQuery.value = value,
-                style: TextStyle(color: Colors.black87),
-                decoration: InputDecoration(
-                  hintText: 'Search name or ticket...',
-                  fillColor: Colors.white,
-                  hoverColor: Colors.grey.shade100,
-                  filled: true,
-                  prefixIcon: Icon(Icons.search, color: Colors.black),
-                  contentPadding: EdgeInsets.symmetric(vertical: 0),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(50),
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
+          // Search Bar Modern
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+            ),
+            child: TextField(
+              onChanged: (value) => controller.searchQuery.value = value,
+              decoration: InputDecoration(
+                hintText: 'Cari nama atau tiket...',
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF0038FF)),
+                filled: true,
+                fillColor: const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
 
-          SizedBox(height: 10),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'List Name Participant In Events',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 20),
+
+          // List Peserta
           Expanded(
             child: Obx(() {
               final list = controller.filteredParticipants;
-
               if (list.isEmpty) {
-                return Center(child: Text('Participant not found.'));
+                return const Center(child: Text('Peserta tidak ditemukan.'));
               }
-
               return ListView.builder(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: list.length,
                 itemBuilder: (context, index) {
                   final person = list[index];
                   final isPresent = person['status'] == 'Present';
 
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       leading: CircleAvatar(
-                        backgroundColor: isPresent
-                            ? Colors.green.shade100
-                            : Colors.red.shade100,
-                        child: Icon(
-                          isPresent ? Icons.check : Icons.close,
-                          color: isPresent ? Colors.green : Colors.red,
+                        backgroundColor: isPresent ? Colors.green.shade50 : Colors.red.shade50,
+                        child: Icon(isPresent ? Icons.check : Icons.close, color: isPresent ? Colors.green : Colors.red, size: 20),
+                      ),
+                      title: Text(person['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text('ID: ${person['id']}', style: const TextStyle(fontSize: 12)),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isPresent ? Colors.green.shade50 : Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                      title: Text(
-                        person['name']!,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('ID: ${person['id']}'),
-                      trailing: Text(
-                        isPresent ? 'PRESENT' : 'ABSENT',
-                        style: TextStyle(
-                          color: isPresent ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          isPresent ? 'HADIR' : 'ABSEN',
+                          style: TextStyle(
+                            color: isPresent ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -117,10 +96,7 @@ class UserValidationView extends GetView<UserValidationController> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        role: 'gatekeeper', // <-- Otomatis nampilin menu Q&A menyala
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 1, role: 'gatekeeper'),
     );
   }
 }

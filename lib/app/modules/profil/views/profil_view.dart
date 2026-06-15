@@ -1,296 +1,288 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
+import 'package:tranlator_v1/app/components/custom_bottom_nav.dart'; // Sesuaikan path jika berbeda
 import '../controllers/profil_controller.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class ProfilView extends GetView<ProfilController> {
   const ProfilView({super.key});
+
   @override
   Widget build(BuildContext context) {
     final args = Get.arguments as Map<String, dynamic>?;
     final currentRole = args?['role'] ?? 'user';
+
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Latar belakang abu-abu sangat muda khas UI Clean
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text("Profil", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.grey[50],
+        elevation: 0, // Hilangkan bayangan kasar AppBar
+        title: const Text(
+          "Profile",
+          style: TextStyle(
+            color: Color(0xFF1E293B),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          // =======================================================
-          // BAGIAN ATAS: BISA DI-SCROLL (Expanded)
-          // =======================================================
           Expanded(
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(), // Efek membal khas iOS
               child: Column(
                 children: [
-                  Stack(
-                    children: [
-                      // ====== BACKGROUND MELENGKONG
-                      Container(
-                        width: double.infinity,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(30),
-                            bottomRight: Radius.circular(30),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
+                  const SizedBox(height: 20),
 
-                      // ====== PROFIL
-                      Align(
-                        alignment: Alignment.center,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                  // ==========================================
+                  // 1. AREA FOTO PROFIL (Desain Presisi)
+                  // ==========================================
+                  Center(
+                    child: Column(
+                      children: [
+                        // Stack di sini ukurannya disesuaikan dengan foto
+                        Stack(
+                          clipBehavior: Clip.none,
                           children: [
                             Container(
-                              height: 130,
-                              width: 130,
+                              height: 120,
+                              width: 120,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 4,
-                                ),
-                                image: DecorationImage(
-                                  image: AssetImage("images/profil.png"),
+                                color: Colors.white,
+                                border: Border.all(color: Colors.white, width: 4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blueGrey.withOpacity(0.15),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                                image: const DecorationImage(
+                                  image: AssetImage("assets/images/profil.png"), // Pastikan gambar ada
                                   fit: BoxFit.cover,
                                 ),
                               ),
                             ),
-                            SizedBox(height: 10),
-                            Obx(
-                              () => Text(
-                                controller.userprofil[0]['name'] ?? '',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                            // Tombol Edit Foto menempel di pojok kanan bawah foto
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: InkWell(
+                                onTap: () => controller.ubahfoto(),
+                                child: Container(
+                                  height: 38,
+                                  width: 38,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 3),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blueAccent.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.camera_alt_rounded, size: 18, color: Colors.white),
                                 ),
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Obx(
-                              () => Text(
-                                controller.userprofil[0]['email'] ?? '',
-                                style: TextStyle(color: Colors.grey),
                               ),
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 15),
 
-                      // ====== PEN
-                      Positioned(
-                        top: 90,
-                        right: 180,
-                        child: Container(
-                          height: 40,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.blue[900],
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+                        // Nama dan Email
+                        Obx(() => Text(
+                          controller.userprofil.isNotEmpty ? controller.userprofil[0]['name'] ?? 'No Name' : 'Loading...',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
                           ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              controller.ubahfoto();
-                            },
+                        )),
+                        const SizedBox(height: 4),
+                        Obx(() => Text(
+                          controller.userprofil.isNotEmpty ? controller.userprofil[0]['email'] ?? 'No Email' : '',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
-                        ),
-                      ),
-                    ],
+                        )),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 35),
 
-                  // ------------- DATA USER
+                  // ==========================================
+                  // 2. KARTU PERSONAL INFORMATION (Melayang Lembut)
+                  // ==========================================
                   Padding(
-                    padding: EdgeInsets.all(15.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Personal Information',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                         ),
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                        const SizedBox(height: 10),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blueGrey.withOpacity(0.06),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                          elevation: 5,
-                          child: Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  leading: Icon(
-                                    Icons.person,
-                                    color: Colors.blue,
-                                  ),
-                                  title: Text("Name"),
-                                  subtitle: Obx(
-                                    () => Text(
-                                      controller.userprofil[0]['name'] ?? '',
-                                    ),
-                                  ),
-                                ),
-                                Divider(),
-                                ListTile(
-                                  leading: Icon(
-                                    Icons.email,
-                                    color: Colors.blue,
-                                  ),
-                                  title: Text("Email"),
-                                  subtitle: Obx(
-                                    () => Text(
-                                      controller.userprofil[0]['email'] ?? '',
-                                    ),
-                                  ),
-                                ),
-                                Divider(),
-                                ListTile(
-                                  leading: Icon(
-                                    Icons.phone,
-                                    color: Colors.blue,
-                                  ),
-                                  title: Text("Phone"),
-                                  subtitle: Obx(
-                                    () => Text(
-                                      controller.userprofil[0]['phone'] ?? '',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          // BUNGKUS COLUMN INI DENGAN SATU OBX SAJA
+                          child: Obx(() => Column(
+                            children: [
+                              _buildInfoTile(
+                                icon: Icons.person_outline,
+                                title: "Nama Lengkap",
+                                valueText: controller.userprofil.isNotEmpty ? controller.userprofil[0]['name'] ?? '-' : 'Loading...',
+                              ),
+                              Divider(height: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                              _buildInfoTile(
+                                icon: Icons.email_outlined,
+                                title: "Email",
+                                valueText: controller.userprofil.isNotEmpty ? controller.userprofil[0]['email'] ?? '-' : 'Loading...',
+                              ),
+                              Divider(height: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                              _buildInfoTile(
+                                icon: Icons.phone_outlined,
+                                title: "No Telepon",
+                                valueText: controller.userprofil.isNotEmpty ? controller.userprofil[0]['phone'] ?? '-' : '-',
+                              ),
+                            ],
+                          )),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 45,
-                    width: 460,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[900],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  const SizedBox(height: 25),
+
+                  // ==========================================
+                  // TOMBOL EDIT PROFILE
+                  // ==========================================
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[50], // Tombol Edit warna biru pudar
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                         ),
-                      ),
-                      onPressed: () => controller.ubahProfil(),
-                      icon: Icon(Icons.edit, color: Colors.white),
-                      label: Text(
-                        "Edit Profil",
-                        style: TextStyle(color: Colors.white),
+                        onPressed: () => controller.ubahProfil(),
+                        icon: const Icon(Icons.edit_note_rounded, color: Colors.blueAccent),
+                        label: const Text(
+                          "Edit Profile",
+                          style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(height: 35),
 
-                  SizedBox(height: 30),
-                  // -------------- SETTING & BIOMETRIC
+                  // ==========================================
+                  // 3. KARTU SECURITY & SETTING
+                  // ==========================================
                   Padding(
-                    padding: EdgeInsets.all(15.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Security & Setting',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                         ),
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                        const SizedBox(height: 10),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blueGrey.withOpacity(0.06),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                          elevation: 5,
-                          child: Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Column(
-                              children: [
-                                InkWell(
-                                  onTap: () => controller.ubahPassword(),
-                                  child: ListTile(
-                                    leading: Icon(
-                                      Icons.lock,
-                                      color: Colors.blue,
-                                    ),
-                                    title: Text("Change Password"),
-                                    subtitle: Text('******'),
-                                  ),
-                                ),
-                                Divider(),
-                                InkWell(
-                                  onTap: () {},
-                                  child: ListTile(
-                                    leading: Icon(
-                                      MdiIcons.faceRecognition,
-                                      color: Colors.blue,
-                                    ),
-                                    title: Text("Face Verification"),
-                                    subtitle: Text('Verification required'),
-                                  ),
-                                ),
-                                Divider(),
-                                InkWell(
-                                  onTap: () {},
-                                  child: ListTile(
-                                    leading: Icon(
-                                      Icons.language_sharp,
-                                      color: Colors.blue,
-                                    ),
-                                    title: Text("Change Language"),
-                                    subtitle: Text('English'),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: Column(
+                            children: [
+                              _buildActionTile(
+                                icon: Icons.lock_outline_rounded,
+                                title: "Change Password",
+                                subtitle: "******",
+                                onTap: () => controller.ubahPassword(),
+                              ),
+                              Divider(height: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                              
+                              // --- BAGIAN FACE VERIFICATION YANG SUDAH DINAMIS ---
+                              Obx(() {
+                                final isVerified = controller.isFaceVerified.value;
+                                return _buildActionTile(
+                                  icon: MdiIcons.faceRecognition,
+                                  title: "Face Verification",
+                                  subtitle: isVerified ? "Verified (Ready for Event)" : "Verification required",
+                                  subtitleColor: isVerified ? Colors.green[600] : Colors.red[400], 
+                                  onTap: () => controller.handleFaceVerification(),
+                                );
+                              }),
+                              
+                              Divider(height: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                              _buildActionTile(
+                                icon: Icons.language_rounded,
+                                title: "Bahasa",
+                                subtitle: "English",
+                                onTap: () {},
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 45,
-                    width: 460,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(color: Colors.red),
+                  const SizedBox(height: 30),
+
+                  // ==========================================
+                  // 4. TOMBOL SIGN OUT
+                  // ==========================================
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.red[50], // Merah super pudar
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                         ),
-                      ),
-                      onPressed: () => controller.deleteProfile(),
-                      icon: Icon(Icons.output_sharp, color: Colors.red),
-                      label: Text(
-                        "Sign Out",
-                        style: TextStyle(color: Colors.red),
+                        onPressed: () => controller.deleteProfile(), 
+                        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                        label: const Text(
+                          "Keluar",
+                          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 20),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -298,53 +290,76 @@ class ProfilView extends GetView<ProfilController> {
         ],
       ),
 
-      // =================================================================
-      // BOTTOM NAVIGATION BAR (UI/UX Profesional)
-      // =================================================================
+      // ==========================================
+      // BOTTOM NAVIGATION BAR
+      // ==========================================
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 2,
-        role: currentRole, // <-- Mengikuti role asli user yang sedang aktif
+        role: currentRole, 
       ),
     );
   }
 
-  // Helper untuk membuat struktur tombol Bottom Navigation yang konsisten
-  Widget _buildNavTab({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 4,
-        ), // Memperluas area klik jempol
-        child: Column(
-          mainAxisSize:
-              MainAxisSize.min, // Pastikan tidak memakan tinggi berlebih
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              // Kontras warna: Biru pekat untuk aktif, abu-abu redup untuk tidak aktif
-              color: isActive ? Colors.blue.shade700 : Colors.grey.shade400,
+  // ==========================================
+  // WIDGET BANTUAN UNTUK DATA PROFIL
+  // ==========================================
+  Widget _buildInfoTile({required IconData icon, required String title, required String valueText}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.blueAccent, size: 20),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text(
+                  valueText, 
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1E293B))
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? Colors.blue.shade700 : Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  // ==========================================
+  // WIDGET BANTUAN UNTUK TOMBOL MENU (SETTING)
+  // ==========================================
+  Widget _buildActionTile({
+    required IconData icon, 
+    required String title, 
+    required String subtitle, 
+    Color? subtitleColor, // Mendukung warna dinamis
+    required VoidCallback onTap
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+        child: Icon(icon, color: Colors.blueAccent, size: 20),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1E293B))),
+      subtitle: Text(
+        subtitle, 
+        style: TextStyle(
+          color: subtitleColor ?? Colors.grey.shade500, 
+          fontSize: 12, 
+          fontWeight: subtitleColor != null ? FontWeight.bold : FontWeight.normal
+        )
+      ),
+      trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey.shade400),
     );
   }
 }

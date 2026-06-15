@@ -1,188 +1,204 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-
 import '../controllers/notifikasi_controller.dart';
 
 class NotifikasiView extends GetView<NotifikasiController> {
   const NotifikasiView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Notifications')),
-      body: Center(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey[400]!),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        color: Colors.blue.withOpacity(0.3),
-                      ),
-                      child: Icon(
-                        Icons.calendar_month_outlined,
-                        size: 20,
-                        color: Colors.blue[900],
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      // <--- 1. Bungkus Column pakai Expanded
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment .center, // <--- 2. Biar rata kiri semua
-                        children: [
-                          Text(
-                            'The Future of Neural Translation starts in 15 minutes.',
-                            softWrap:
-                                true, // <--- 3. Memastikan teks membungkus ke bawah
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 8,
-                          ), // Tambahan jarak biar nggak terlalu nempel
-                          Row(
-                            children: [
-                              Text('Seminar Alert'),
-                              SizedBox(width: 5),
-                              Icon(Icons.circle, size: 8, color: Colors.blue),
-                              SizedBox(width: 5),
-                              Text(
-                                'Just Now',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          // button
-                          InkWell(
-                            onTap: () {},
-                            child: Container(
-                              width: double.infinity,
-                              margin: EdgeInsets.only(top: 15),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[800],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Align(
-                                alignment: AlignmentGeometry.center,
-                                child: Text(
-                                  'Join Now',
-                                  style: TextStyle(color: Colors.white, fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey[400]!),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        color: Colors.blue.withOpacity(0.3),
-                      ),
-                      child: Icon(
-                        Icons.file_copy_rounded,
-                        size: 20,
-                        color: Colors.blue[900],
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment
-                            .center, // <--- 2. Biar rata kiri semua
-                        children: [
-                          Text(
-                            'Transcript fr "Clud Computing 2023" is now available',
-                            softWrap:
-                                true, // <--- 3. Memastikan teks membungkus ke bawah
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text('Transcript Ready'),
-                              SizedBox(width: 5),
-                              Icon(Icons.circle, size: 8, color: Colors.blue),
-                              SizedBox(width: 5),
-                              Text(
-                                '2h ago',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-
-                          // button
-                          InkWell(
-                            onTap: () {},
-                            child: Container(
-                              width: double.infinity,
-                              margin: EdgeInsets.only(top: 15),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[800],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Align(
-                                alignment: AlignmentGeometry.center,
-                                child: Text(
-                                  'Download',
-                                  style: TextStyle(color: Colors.white, fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+      backgroundColor: Colors.grey[50], // Background terang Neumorphism
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        automaticallyImplyLeading: false, // Menghilangkan tombol back default jika ini main menu
+        title: const Text(
+          'Notifikasi',
+          style: TextStyle(
+            color: Color(0xFF1E293B),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            letterSpacing: 0.5,
+          ),
         ),
+      ),
+      body: Obx(() {
+        // Jika tidak ada notifikasi
+        if (controller.notifications.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.notifications_off_outlined, size: 80, color: Colors.grey[300]),
+                const SizedBox(height: 15),
+                Text(
+                  "Belum ada notifikasi",
+                  style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  "Pembaruan event dan tiket akan muncul di sini.",
+                  style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Jika ada notifikasi (Looping data)
+        return ListView.separated(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          itemCount: controller.notifications.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final notif = controller.notifications[index];
+            return _buildNotificationCard(
+              type: notif['type']!,
+              title: notif['title']!,
+              message: notif['message']!,
+              time: notif['time']!,
+              buttonText: notif['button_text']!,
+              onTap: () => controller.onNotificationTap(notif['type']!),
+            );
+          },
+        );
+      }),
+    );
+  }
+
+  // ==========================================
+  // WIDGET BANTUAN UNTUK KARTU NOTIFIKASI
+  // ==========================================
+  Widget _buildNotificationCard({
+    required String type,
+    required String title,
+    required String message,
+    required String time,
+    required String buttonText,
+    required VoidCallback onTap,
+  }) {
+    // Menentukan Tema (Warna & Ikon) berdasarkan Tipe Notifikasi
+    Color primaryColor;
+    IconData iconData;
+
+    if (type == 'purchase') {
+      primaryColor = const Color(0xFF34A853); // Hijau untuk Sukses Beli
+      iconData = Icons.local_activity_rounded;
+    } else if (type == 'reminder') {
+      primaryColor = Colors.orangeAccent; // Oranye untuk Peringatan Waktu
+      iconData = Icons.alarm_rounded;
+    } else {
+      primaryColor = Colors.blueAccent; // Biru untuk Info Baru
+      iconData = Icons.campaign_rounded;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueGrey.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Ikon Kiri
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primaryColor.withOpacity(0.1),
+            ),
+            child: Icon(iconData, size: 24, color: primaryColor),
+          ),
+          const SizedBox(width: 16),
+          
+          // 2. Konten Kanan (Teks & Tombol)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header: Judul & Waktu
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      time,
+                      style: TextStyle(color: Colors.grey[400], fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                
+                // Pesan Deskripsi
+                Text(
+                  message,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                
+                // Tombol Aksi
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: onTap,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        buttonText,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

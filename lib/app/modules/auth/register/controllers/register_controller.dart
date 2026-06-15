@@ -1,103 +1,188 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart'
+    as g_auth; // Mencegah konflik class
 
 class RegisterController extends GetxController {
-  //TODO: Implement RegisterController
- 
-  void goToLogin() {
-    Get.toNamed('/login');
+  final SupabaseClient _supabase = Supabase.instance.client;
+
+  // Controller untuk mengambil teks dari form
+  final nameC = TextEditingController();
+  final emailC = TextEditingController();
+  final passC = TextEditingController();
+
+  // State untuk animasi loading pada tombol
+  var isLoading = false.obs;
+
+  // ========================================================
+  // 1. REGISTRASI MANUAL DENGAN EMAIL & PASSWORD (OTP)
+  // ========================================================
+  Future<void> registerAccount() async {
+    final name = nameC.text.trim();
+    final email = emailC.text.trim();
+    final password = passC.text.trim();
+
+    // Validasi Input Kosong
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      Get.snackbar(
+        "Data Tidak Lengkap",
+        "Semua kolom wajib diisi!",
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+      return;
+    }
+
+    // Validasi panjang password
+    if (password.length < 6) {
+      Get.snackbar(
+        "Password Terlalu Pendek",
+        "Password minimal harus terdiri dari 6 karakter.",
+        backgroundColor: Colors.orange.withOpacity(0.1),
+        colorText: Colors.orange,
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      // Buat akun di Supabase Auth (Otomatis butuh verifikasi OTP)
+      final AuthResponse response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      if (response.user != null) {
+        // Notifikasi OTP terkirim
+        Get.snackbar(
+          "Cek Email Anda",
+          "Kode OTP 6 digit telah dikirim ke $email",
+          backgroundColor: Colors.blue.withOpacity(0.1),
+          colorText: Colors.blue[900],
+          snackPosition: SnackPosition.TOP,
+        );
+
+        // Arahkan ke halaman Verifikasi OTP
+        Get.toNamed(
+          '/verify-otp',
+          arguments: {'email': email, 'name': name, 'id': response.user!.id},
+        );
+
+        // Bersihkan form
+        nameC.clear();
+        emailC.clear();
+        passC.clear();
+      }
+    } on AuthException catch (e) {
+      Get.snackbar(
+        "Pendaftaran Gagal",
+        e.message,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+    } catch (e) {
+      Get.snackbar("Terjadi Kesalahan", e.toString());
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-final passwordC = TextEditingController();
- Future<void> goRegisterSuccess() async {
-  final password = passwordC.text.trim();
+  // ========================================================
+  // 2. REGISTRASI / LOGIN INSTAN DENGAN GOOGLE (SSO)
+  // ========================================================
+  Future<void> signInWithGoogle() async {
+    try {
+      isLoading.value = true;
 
-  // VALIDASI PASSWORD
-  if (password == '123' || password.length < 6) {
-    Get.snackbar(
-      'Registration Failed',
-      'Password must be at least 6 characters',
-      backgroundColor: Colors.red.shade400,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
-      margin: const EdgeInsets.all(12),
-      borderRadius: 12,
-      icon: const Icon(
-        Icons.error_outline,
-        color: Colors.white,
-      ),
-      duration: const Duration(seconds: 3),
-    );
+      // Masukkan Web Client ID dari Google Cloud Console
+      const webClientId =
+          '303118747448-8cn075h1q85c0p7t6nkhmu7csttbhjr0.apps.googleusercontent.com';
 
-    return;
+      // Inisialisasi Google Sign In menggunakan alias g_auth
+      final g_auth.GoogleSignIn googleSignIn = g_auth.GoogleSignIn(
+        serverClientId:
+            webClientId, // Ubah ke 'clientId' jika parameter ini tidak dikenali di versi Anda
+      );
+
+      // Munculkan pop-up pilihan akun Google
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        return; // Dibatalkan oleh user
+      }
+
+      // Minta token autentikasi dari Google
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (accessToken == null || idToken == null) {
+        Get.snackbar('Error', 'Gagal mendapatkan token dari Google');
+        return;
+      }
+
+      // Serahkan token tersebut ke Supabase
+      final AuthResponse response = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      if (response.user != null) {
+        // Pastikan user baru ini terdaftar di tabel 'profiles'
+        await _checkAndCreateProfile(response.user!);
+
+        Get.snackbar(
+          'Berhasil',
+          'Selamat datang, ${response.user!.userMetadata?['full_name'] ?? 'User'}!',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+
+        // Lewati OTP, langsung arahkan ke dashboard
+        Get.offAllNamed('/dashboard');
+      }
+    } catch (e) {
+      print("Error Google Auth: $e");
+      Get.snackbar(
+        'Gagal',
+        'Terjadi kesalahan saat otentikasi Google: $e',
+        backgroundColor: Colors.red.withOpacity(0.1),
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  // LOADING
-  Get.dialog(
-    Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const CircularProgressIndicator(),
-      ),
-    ),
-    barrierDismissible: false,
-  );
+  // ========================================================
+  // HELPER: MENYIMPAN DATA GOOGLE KE TABEL PROFILES
+  // ========================================================
+  Future<void> _checkAndCreateProfile(User user) async {
+    final existingProfile = await _supabase
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
 
-  await Future.delayed(const Duration(seconds: 2));
+    // Jika data belum ada, berarti ini register baru. Jika sudah ada, berarti cuma login ulang.
+    if (existingProfile == null) {
+      await _supabase.from('profiles').insert({
+        'id': user.id,
+        'email': user.email,
+        'full_name':
+            user.userMetadata?['full_name'] ??
+            user.userMetadata?['name'] ??
+            'User Syncra',
+      });
+    }
+  }
 
-  Get.back();
-
-  // SUCCESS CHECK
-  Get.dialog(
-    Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.white,
-                size: 21,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            const Text(
-              'Registration Successful',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-    barrierDismissible: false,
-  );
-
-  await Future.delayed(
-    const Duration(milliseconds: 1500),
-  );
-
-  Get.back();
-  Get.offAllNamed('/login');
-}
+  @override
+  void onClose() {
+    nameC.dispose();
+    emailC.dispose();
+    passC.dispose();
+    super.onClose();
+  }
 }

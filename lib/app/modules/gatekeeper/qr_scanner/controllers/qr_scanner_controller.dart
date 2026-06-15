@@ -9,4 +9,6 @@ class QrScannerController extends GetxController {
 void goToValidation(){
   Get.toNamed('user-validation');
 }
+
+  void handleQrResult(String s) {}
 }

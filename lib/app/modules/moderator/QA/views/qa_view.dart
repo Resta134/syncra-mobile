@@ -1,88 +1,106 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
-
 import '../controllers/qa_controller.dart';
 
 class QaView extends GetView<QaController> {
   const QaView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color(0xFFF1F5F9), // Abu-abu sangat muda
       appBar: AppBar(
-        automaticallyImplyLeading: false,//hapus arrow
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(
+          255,
+          255,
+          255,
+          255,
+        ), // Navy gelap yang tenang
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
-        title: Column(
-          children: [
-            Text(
-              'AI Seminar',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            Text(
-              'Dr. Cahaya',
-              style: TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ],
+        title: const Text(
+          'Kurasi Tanya Jawab',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // HEADER TEXT
-          Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Header Section
+          // Ganti bagian Header Section (di bawah AppBar) dengan ini:
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              // Memberikan shadow halus agar header 'menopang' list di bawahnya
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black,
+                  offset: Offset(0, 2),
+                  blurRadius: 4,
+                ),
+              ],
+              // Membuat sudut bawah sedikit melengkung agar lebih modern
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+            ),
+            child: Row(
               children: [
-                Text(
-                  'Q&A Curation',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    fontFamily: 'serif',
+                // Tambahkan ikon kecil agar tidak terlalu polos
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.forum,
+                    color: Color(0xFF1E293B),
+                    size: 20,
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Manage incoming questions and send approved content to the main projector.',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                const SizedBox(width: 15),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Seminar AI: Dr. Cahaya',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    Text(
+                      'Kelola pertanyaan audiens',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          // LIST PERTANYAAN
+          // List Pertanyaan
           Expanded(
-            child: Obx(() {
-              return ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Obx(
+              () => ListView.builder(
+                padding: const EdgeInsets.all(16),
                 itemCount: controller.questions.length,
-                itemBuilder: (context, index) {
-                  final q = controller.questions[index];
-                  return _buildQuestionCard(q);
-                },
-              );
-            }),
+                itemBuilder: (context, index) =>
+                    _buildQuestionCard(controller.questions[index]),
+              ),
+            ),
           ),
 
-          // BOTTOM BAR (Start/End Session)
+          // Footer Action Bar
           Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
               color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey)),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
             ),
             child: SafeArea(
               child: Row(
@@ -90,40 +108,24 @@ class QaView extends GetView<QaController> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {},
-                      icon: Icon(
-                        Icons.play_circle_outline_outlined,
-                        color: Colors.white,
-                      ),
-                      label: Text(
-                        'Start Q&A Session',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: const Text('Mulai Sesi'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        controller.stopQuestion();
-                      },
-                      icon: Icon(Icons.stop_circle, color: Colors.white),
-                      label: Text(
-                        'End Q&A Session',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                    child: OutlinedButton.icon(
+                      onPressed: () => controller.stopQuestion(),
+                      icon: const Icon(Icons.stop_rounded),
+                      label: const Text('Akhiri Sesi'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red.shade700,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                     ),
                   ),
@@ -135,26 +137,30 @@ class QaView extends GetView<QaController> {
       ),
       bottomNavigationBar: const CustomBottomNavBar(
         currentIndex: 1,
-        role: 'moderator', // <-- Otomatis nampilin menu Q&A menyala
+        role: 'moderator',
       ),
     );
   }
 
-  // WIDGET CARD PERTANYAAN
   Widget _buildQuestionCard(Map<String, dynamic> q) {
     bool isProjecting = q['status'] == 'projecting';
-    bool isApproved = q['status'] == 'approved';
 
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isProjecting ? Colors.blue.withOpacity(0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isProjecting ? Colors.blue.shade700 : Colors.grey.shade300,
-          width: isProjecting ? 2 : 1,
+          color: isProjecting ? const Color(0xFF1E293B) : Colors.grey.shade200,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,123 +170,105 @@ class QaView extends GetView<QaController> {
             children: [
               Text(
                 q['sender'],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.grey,
                 ),
               ),
               if (isProjecting)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade700,
-                    borderRadius: BorderRadius.circular(4),
+                    color: const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.arrow_upward, size: 12, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        'On Screen',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  child: const Text(
+                    'Sedang Ditampilkan',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                )
-              else if (isApproved)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      size: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      'Approved',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
                 ),
             ],
           ),
-          SizedBox(height: 12),
-          // Isi Pertanyaan
+          const SizedBox(height: 10),
           Text(
             q['text'],
-            style: TextStyle(fontSize: 16, height: 1.4, fontFamily: 'serif'),
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          SizedBox(height: 16),
-          // Row Tombol Action
+          const SizedBox(height: 16),
           Row(
             children: [
-              // Tombol Dismiss
-              ElevatedButton(
-                onPressed: () => controller.dismissQuestion(q['id']),
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: Colors.grey.shade200,
-                  foregroundColor: Colors.black87,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text('Dismiss'),
-              ),
-              SizedBox(width: 8),
-
-              // Jika Status Pending: Munculin Tombol Approve Outline
-              if (q['status'] == 'pending') ...[
-                OutlinedButton(
-                  onPressed: () => controller.approveQuestion(q['id']),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue.shade700,
-                    side: BorderSide(color: Colors.blue.shade700),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text('Approve'),
-                ),
-                SizedBox(width: 8),
-              ],
-
-              // Tombol Projecting (Beda style kalau lagi aktif)
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: isProjecting
-                      ? null
-                      : () => controller.projectToScreen(q['id']),
-                  icon: Icon(
-                    isProjecting ? Icons.present_to_all : Icons.arrow_upward,
-                    size: 16,
+                child: _buildActionButton(
+                  'Hapus',
+                  Colors.grey.shade100,
+                  Colors.black87,
+                  () => controller.dismissQuestion(q['id']),
+                ),
+              ),
+              if (q['status'] == 'pending') ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    'Setujui',
+                    Colors.indigo.shade50,
+                    const Color(0xFF1E293B),
+                    () => controller.approveQuestion(q['id']),
                   ),
-                  label: Text(
-                    isProjecting ? 'Projecting...' : 'Send to Projector',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: isProjecting
-                        ? Colors.blue.shade300
-                        : Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+                ),
+              ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildActionButton(
+                  isProjecting ? 'Ditampilkan' : 'Proyeksikan',
+                  isProjecting
+                      ? Colors.indigo.shade100
+                      : const Color(0xFF1E293B),
+                  isProjecting ? const Color(0xFF1E293B) : Colors.white,
+                  () => controller.projectToScreen(q['id']),
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    String text,
+    Color bg,
+    Color fg,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: fg,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

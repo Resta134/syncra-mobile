@@ -1,52 +1,51 @@
 import 'package:get/get.dart';
 
 class QASpeakController extends GetxController {
-  //TODO: Implement QASpeakController
-
   var isMicMuted = false.obs;
   var aiStatus = 'AI SYNC: ONLINE'.obs;
   var remainingTime = '5:30 Remaining'.obs;
 
-  // Daftar Pertanyaan Dummy (Reaktif)
+  // Daftar Pertanyaan dengan atribut 'status'
   var questions = <Map<String, dynamic>>[
     {
       'id': 1,
       'name': 'Yulia Petrovna',
       'avatar': 'https://i.pravatar.cc/150?img=1',
       'question': 'Bagaimana kita mengatasi bias-bias algoritma kepolisian?',
-      'isLive': true, // Ini yang sedang tayang di layar besar
+      'isLive': true,
+      'status': 'pending', // Status awal: pending
     },
     {
       'id': 2,
       'name': 'David Chen',
       'avatar': 'https://i.pravatar.cc/150?img=11',
       'question': 'Apakah AI generatif akan menghentikan proses seni kreatif?',
-      'isLive': true,
-    },
-    {
-      'id': 3,
-      'name': 'Omar Khalid',
-      'avatar': 'https://i.pravatar.cc/150?img=12',
-      'question': 'Bagaimana dengan AI dan privasi?',
       'isLive': false,
+      'status': 'pending',
     },
   ].obs;
 
-  // Fungsi Aksi
   void toggleMic() {
     isMicMuted.value = !isMicMuted.value;
   }
 
+  // Fungsi untuk menandai sudah terjawab
   void markAsAnswered(int id) {
-    // Menghapus dari daftar karena sudah dijawab
-    questions.removeWhere((q) => q['id'] == id);
-    Get.snackbar('Sukses', 'Pertanyaan ditandai sudah dijawab', 
-        snackPosition: SnackPosition.BOTTOM);
+    int index = questions.indexWhere((q) => q['id'] == id);
+    if (index != -1) {
+      questions[index]['status'] = 'answered'; // Update status, jangan di-remove
+      questions.refresh(); // Wajib panggil ini agar UI terupdate
+      Get.snackbar('Sukses', 'Pertanyaan ditandai sudah dijawab', 
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   void skipQuestion(int id) {
-    // Menghapus dari daftar (dilewati)
-    questions.removeWhere((q) => q['id'] == id);
+    int index = questions.indexWhere((q) => q['id'] == id);
+    if (index != -1) {
+      questions[index]['status'] = 'skipped';
+      questions.refresh();
+    }
   }
 
   void goToDashboard() {

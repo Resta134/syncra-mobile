@@ -27,6 +27,8 @@ abstract class Routes {
   static const PAYMENT = _Paths.PAYMENT;
   static const FACEREGISTRATION = _Paths.FACEREGISTRATION;
   static const FACESCANNER = _Paths.FACESCANNER;
+  static const AUTH_SPLASH = _Paths.AUTH_SPLASH;
+  static const AUTH_VERIFY_OTP = _Paths.AUTH_VERIFY_OTP;
 }
 
 abstract class _Paths {
@@ -55,4 +57,6 @@ abstract class _Paths {
   static const PAYMENT = '/payment';
   static const FACEREGISTRATION = '/faceregistration';
   static const FACESCANNER = '/facescanner';
+  static const AUTH_SPLASH = '/splash';
+  static const AUTH_VERIFY_OTP = '/verify-otp';
 }

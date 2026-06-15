@@ -1,108 +1,72 @@
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:tranlator_v1/app/modules/user/event_detail/controllers/event_detail_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardController extends GetxController {
-  final liveStreamData = [
-    {
-      'category': 'GLOBAL TECH SUMMIT',
-      'viewers': '1.2k',
-      'title': 'AI Ethics & The Future of Work: A Global Perspective',
-      'author': 'Dr. Rhiki',
-      'lang': 'EN → ID',
-    },
-    {
-      'category': 'GLOBAL TECH SUMMIT',
-      'viewers': '850',
-      'title': 'Machine Learning Implementation in Healthcare',
-      'author': 'Prof. Alan',
-      'lang': 'EN → ID',
-    },
-    {
-      'category': 'DESIGN TALKS',
-      'viewers': '2.1k',
-      'title': 'Building Accessible User Interfaces in 2026',
-      'author': 'Sarah Jane',
-      'lang': 'ID → EN',
-    },
-  ].obs;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  final upcomingEventsData = [
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 10:00 AM',
-    'tag': 'DESIGN',
-    'titleupcoming': 'AI in Everyday Life: We Walk the talk',
-    'authorUp': 'Dr. Mulyono',
-    'location': 'Jaksel',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 2:00 PM',
-    'tag': 'TECH',
-    'titleupcoming': 'UX/UI Patterns for Multi-language Interfaces',
-    'authorUp': 'Dr. Bowo',
-    'location': 'Bekasi',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 4:00 PM',
-    'tag': 'BUSINESS',
-    'titleupcoming': 'Global Market Trends in the Age of AI',
-    'authorUp': 'Dr. Mega',
-    'location': 'Bekasi',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 6:00 PM',
-    'tag': 'EDUCATION',
-    'titleupcoming': 'The Future of Learning: AI-Powered Education',
-    'authorUp': 'Dr. O',
-    'location': 'Online', // <-- GUA TAMBAHIN BIAR GAK BOLONG
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 8:00 PM',
-    'tag': 'ENTERTAINMENT',
-    'titleupcoming': 'AI in Entertainment: Revolutionizing Content Creation',
-    'authorUp': 'Dr. O',
-    'location': 'Online', // <-- GUA TAMBAHIN BIAR GAK BOLONG
-  },
-].obs;
- 
-  void goToHistory() {
-    print("Membuka halaman riwayat...");
-    Get.toNamed('/history');
+  // Menggunakan tipe dynamic karena data dari Supabase bervariasi (teks, tanggal, dll)
+  var liveStreamData = <Map<String, dynamic>>[].obs;
+  var upcomingEventsData = <Map<String, dynamic>>[].obs;
+
+  var isLoading = true.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Tarik data event otomatis saat halaman beranda dibuka
+    fetchEvents();
   }
 
-  void goToEvents() {
-    // print("Membuka halaman detail acara...");
-    Get.toNamed('/events');
+  Future<void> fetchEvents() async {
+    try {
+      isLoading.value = true;
+
+      // Menarik semua data dari tabel 'events' di Supabase
+      final List<dynamic> response = await _supabase.from('events').select();
+
+      // Kosongkan list agar tidak numpuk saat halaman di-refresh
+      liveStreamData.clear();
+      upcomingEventsData.clear();
+
+      // Memilah data berdasarkan kolom 'status' di tabel
+      for (var event in response) {
+        // Cek status dengan aman (dijadikan huruf kecil semua)
+        final status = (event['status'] ?? '').toString().toLowerCase();
+        
+        // KITA UBAH DI SINI: Deteksi kata 'ongoing' ATAU 'live'
+        if (status == 'ongoing' || status == 'live') {
+          liveStreamData.add(event as Map<String, dynamic>);
+        } else if (status == 'upcoming') {
+          upcomingEventsData.add(event as Map<String, dynamic>);
+        }
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Terjadi Kesalahan",
+        "Gagal memuat data event dari server.",
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      print("Error fetchEvents: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void goToProfil() {
-    print("Membuka halaman profil...");
-    Get.toNamed('/profil');
-  }
-
+  // --- Fungsi Navigasi (Sesuaikan rutenya dengan nama rute aslimu) ---
   void goToNotifikasi() {
-    print("Membuka halaman profil...");
     Get.toNamed('/notifikasi');
   }
 
-  void goToTicket() {
-    print("Membuka halaman Ticket...");
-    Get.toNamed('/ticket');
+  void goToEvents() {
+    Get.toNamed('/events');
   }
 
-  void goToEventDetail(Map<String, String> data) {
-    print("Membuka halaman detail acara...");
-    final detailController = Get.put(EventDetailController());
-
-    // 2. Baru panggil fungsinya lewat variabel tersebut (huruf kecil depannya)
-    detailController.checkTicketStatus(data);
+  void goToLive() {
+    Get.toNamed('/live-room');
   }
-  void goToLive(){
-    Get.toNamed('/live');
+
+  void goToEventDetail(Map<String, dynamic> data) {
+    Get.toNamed('/event-detail', arguments: data);
   }
 }

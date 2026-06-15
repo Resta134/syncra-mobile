@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
-import 'package:tranlator_v1/app/modules/user/dashboard/controllers/dashboard_controller.dart';
-// import 'dashboard_controller.dart'; // Sesuaikan import-nya
+import '../controllers/dashboard_controller.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -10,12 +9,13 @@ class DashboardView extends GetView<DashboardController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
 
-      // === APPBAR SESUAI KODE LU ===
+      // === APPBAR ===
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white.withOpacity(0.9),
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
         title: Row(
           children: [
             Container(
@@ -23,288 +23,344 @@ class DashboardView extends GetView<DashboardController> {
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage("images/image.png"),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blueGrey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                image: const DecorationImage(
+                  image: AssetImage("assets/images/logo_syncro.png"),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-            Text("AsynCra App"),
+            const SizedBox(width: 12),
+            const Text(
+              "syncro",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF05114D),
+                letterSpacing: -0.5,
+              ),
+            ),
           ],
         ),
-        elevation: 2, // Biar ada bayangan tipis
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: IconButton(
-              onPressed: () => controller.goToNotifikasi(),
-              icon: Icon(
-                Icons.notifications_active,
-                color: Colors.blue[700],
-                size: 25,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blueGrey.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                onPressed: () => controller.goToNotifikasi(),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1E293B),
+                  size: 22,
+                ),
               ),
             ),
           ),
         ],
       ),
 
-      // === BODY DENGAN SCROLL ===
+      // === BODY ===
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-            // Header: Live Now
+            // --- HEADER: SEDANG BERLANGSUNG ---
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 children: [
                   Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Color(0xFFC5221F),
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Live Now',
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Sedang Berlangsung', // Diubah ke Bahasa Indonesia
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // HORIZONTAL SCROLL CARD DENGAN GETX
+            // --- HORIZONTAL SCROLL LIVE ---
             SizedBox(
-              height: 340,
-              // Kita bungkus Obx karena mau baca data reaktif dari Controller
-              child: Obx(
-                () => ListView.separated(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 10.0,
+              height: 320,
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (controller.liveStreamData.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "Belum ada event yang sedang live.",
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 15.0,
                   ),
                   scrollDirection: Axis.horizontal,
-                  // Jumlah card menyesuaikan jumlah data di Controller
                   itemCount: controller.liveStreamData.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 18),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 20),
                   itemBuilder: (context, index) {
-                    // MENGAMBIL DATA DARI CONTROLLER SESUAI INDEX/URUTAN
                     final data = controller.liveStreamData[index];
-                    // Melempar data ke widget Card
                     return _buildLiveCard(data);
                   },
-                ),
-              ),
+                );
+              }),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 15),
 
-            // Main: Upcoming Events
+            // --- HEADER: EVENT MENDATANG ---
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Upcoming Events',
+                  const Text(
+                    'Event Mendatang', // Diubah ke Bahasa Indonesia
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Vertikal scroll card upcoming event (bisa pakai ListView.builder biasa karena vertikal)
-            Container(
-              child: Column(
-                children: [
-                  Obx(
-                    () => ListView.builder(
-                      shrinkWrap:
-                          true, // Biar ListView mengikuti panjang isinya
-                      physics:
-                          NeverScrollableScrollPhysics(), // Biar ga konflik sama scroll body utama
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 10,
+                  InkWell(
+                    onTap: () => controller.goToEvents(),
+                    child: const Text(
+                      'Lihat Semua', // Diubah ke Bahasa Indonesia
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
-                      itemCount: controller.upcomingEventsData.length > 3
-                          ? 3
-                          : controller.upcomingEventsData.length,
-                      itemBuilder: (context, index) {
-                        final data = controller.upcomingEventsData[index];
-                        return _buildUpcomingCard(data);
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(right: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            controller.goToEvents();
-                          },
-                          child: Text(
-                            'View All Now >',
-                            style: TextStyle(color: Colors.blueAccent),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ],
               ),
             ),
 
-            SizedBox(height: 10),
-
-            // ---- History Section ----
+            // --- VERTIKAL SCROLL UPCOMING EVENTS ---
+            Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              if (controller.upcomingEventsData.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(
+                      "Belum ada event mendatang.",
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
+                  ),
+                );
+              }
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 10.0,
+                ),
+                itemCount: controller.upcomingEventsData.length > 3
+                    ? 3
+                    : controller.upcomingEventsData.length,
+                itemBuilder: (context, index) {
+                  final data = controller.upcomingEventsData[index];
+                  return _buildUpcomingCard(data);
+                },
+              );
+            }),
+            const SizedBox(height: 20),
           ],
         ),
       ),
       bottomNavigationBar: const CustomBottomNavBar(
         currentIndex: 0,
-        role: 'user', // <-- Kasih tahu ini punya moderator
+        role: 'user',
       ),
     );
   }
 
-  // === DESAIN CARD  ==============
-  Widget _buildLiveCard(Map<String, String> data) {
+  // ==========================================
+  // DESAIN KARTU LIVE
+  // ==========================================
+  Widget _buildLiveCard(Map<String, dynamic> data) {
+    final imageUrl = data['image_url'];
+
     return InkWell(
-      onTap: () {
-        controller.goToLive();
-      },
+      onTap: () => controller.goToLive(),
+      borderRadius: BorderRadius.circular(25),
       child: Container(
-        width: 280,
-        padding: EdgeInsets.all(12),
+        width: 260,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.grey.shade200, width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: Offset(2, 4),
+              color: Colors.blueGrey.withOpacity(0.08),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar & Badge
             Stack(
               children: [
                 Container(
                   height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(18),
+                    image: DecorationImage(
+                      image: imageUrl != null && imageUrl.toString().isNotEmpty
+                          ? NetworkImage(imageUrl) as ImageProvider
+                          : const AssetImage('assets/images/placeholder.png'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
                   top: 10,
                   left: 10,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFC5221F),
-                      borderRadius: BorderRadius.circular(6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
-                    child: Text(
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
                       'LIVE',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
                       ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 10,
-                  right: 10,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.translate, size: 15, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text(
-                          data['lang']!,
-                          style: TextStyle(color: Colors.white, fontSize: 11),
-                        ),
-                      ],
                     ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 14),
-            // Kategori & Viewers
+            const SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Center(
-                  child: Text(
-                    data['category']!,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Text(
+                  (data['location'] ?? 'Online').toString().toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.blueAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                   ),
                 ),
-                Row(
+                const Row(
                   children: [
-                    Icon(Icons.groups, color: Colors.blueAccent, size: 14),
+                    Icon(
+                      Icons.people_alt_rounded,
+                      color: Colors.grey,
+                      size: 14,
+                    ),
                     SizedBox(width: 4),
                     Text(
-                      ' ${data['viewers']!}',
-                      style: TextStyle(color: Colors.blueAccent, fontSize: 12),
+                      '1.2K',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-            SizedBox(height: 8),
-            // Judul
+            const SizedBox(height: 8),
             Text(
-              data['title']!,
-              style: TextStyle(
-                fontSize: 15,
+              data['title'] ??
+                  'Event Tanpa Judul', // Default diubah ke Indonesia
+              style: const TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Color(0xFF1E293B),
+                height: 1.3,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            Spacer(),
-            // Author
+            const Spacer(),
             Row(
               children: [
-                CircleAvatar(radius: 12, backgroundColor: Colors.grey.shade400),
-                SizedBox(width: 8),
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.blue[100],
+                  child: const Icon(
+                    Icons.person,
+                    size: 14,
+                    color: Colors.blueAccent,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  data['author']!,
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                  "Admin Syncra",
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -314,131 +370,155 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildUpcomingCard(Map<String, String> data) {
+  // ==========================================
+  // DESAIN KARTU EVENT MENDATANG (Dengan Harga)
+  // ==========================================
+  Widget _buildUpcomingCard(Map<String, dynamic> data) {
+    // 1. Persiapan Data Dasar
+    final imageUrl = data['image_url'];
+    final eventDate = data['event_date'] ?? '-';
+    final rawTime = data['event_time']?.toString() ?? '00:00';
+    final eventTime = rawTime.length > 5 ? rawTime.substring(0, 5) : rawTime;
+
+    // 2. Logika Format Harga Rupiah Langsung di View
+    final price = data['price'];
+    String priceText = 'Gratis';
+    if (price != null && price != 0 && price.toString() != '0') {
+      String priceStr = price.toString();
+      String formatted = '';
+      int counter = 0;
+      for (int i = priceStr.length - 1; i >= 0; i--) {
+        counter++;
+        formatted = priceStr[i] + formatted;
+        if (counter % 3 == 0 && i != 0) {
+          formatted = '.$formatted';
+        }
+      }
+      priceText = 'Rp $formatted';
+    }
+
     return InkWell(
       onTap: () {
-        controller.goToEventDetail(data);
+        controller.goToEventDetail(data); // Bawa data ke halaman detail
       },
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blueGrey.withOpacity(0.06),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Biar foto dan teks sejajar di atas
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail Gambar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                data['thumbnail'] ?? 'images/profil.png', // Fallback aman
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
+            // IMAGE THUMBNAIL
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.blue[50],
+                image: DecorationImage(
+                  image: imageUrl != null && imageUrl.toString().isNotEmpty
+                      ? NetworkImage(imageUrl) as ImageProvider
+                      : const AssetImage('assets//placeholder.png'),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
 
-            // Konten Informasi
+            // CONTENT
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Baris Waktu & Tag Kategori
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        data['time'] ?? 'No Time',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  // TANGGAL & WAKTU
+                  Text(
+                    '$eventDate | $eventTime WIB',
+                    style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
 
-                  // Judul Acara
+                  // JUDUL EVENT
                   Text(
-                    data['titleupcoming'] ??
-                        'No Title', // Pastikan key ini persis sama di Controller
+                    data['title'] ?? 'Tanpa Judul',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 15,
+                      color: Color(0xFF1E293B),
+                      height: 1.2,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
-                  // Baris Author (Aman dari Null)
+                  // BARIS BAWAH: LOKASI & HARGA
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Avatar Author Pertama
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.blue[100],
-                        child: const Icon(
-                          Icons.person,
-                          size: 15,
-                          color: Colors.blue,
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Nama Author (Diganti pakai ?? biar ga crash)
+                      // Lokasi (Kiri)
                       Expanded(
                         child: Row(
                           children: [
-                            Text(
-                              data['authorUp']!,
-                              style: TextStyle(
-                                color: Colors.grey.shade700,
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: Colors.grey.shade400,
                             ),
-                            SizedBox(width: 10),
-                            Text(
-                              '|',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                data['location'] ?? 'Online',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            SizedBox(width: 10),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: Colors.blue[100],
-                                  child: const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 15,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                                SizedBox(width: 5),
-
-                                Text(
-                                  data['location']!,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                    fontSize: 12,
-                                  ),
-                                  maxLines: 1,
-                                ),
-                              ],
                             ),
                           ],
+                        ),
+                      ),
+
+                      // Harga (Kanan)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: priceText == 'Gratis'
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          priceText,
+                          style: TextStyle(
+                            color: priceText == 'Gratis'
+                                ? Colors.green[700]
+                                : Colors.blue[700],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -451,5 +531,4 @@ class DashboardView extends GetView<DashboardController> {
       ),
     );
   }
-
 }

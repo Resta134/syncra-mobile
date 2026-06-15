@@ -4,8 +4,10 @@ import '../modules/auth/login/bindings/login_binding.dart';
 import '../modules/auth/login/views/login_view.dart';
 import '../modules/auth/register/bindings/register_binding.dart';
 import '../modules/auth/register/views/register_view.dart';
-import '../modules/user/facescanner/bindings/facescanner_binding.dart';
-import '../modules/user/facescanner/views/facescanner_view.dart';
+import '../modules/auth/splash/bindings/splash_binding.dart';
+import '../modules/auth/splash/views/splash_view.dart';
+import '../modules/auth/verify_otp/bindings/verify_otp_binding.dart';
+import '../modules/auth/verify_otp/views/verify_otp_view.dart';
 import '../modules/gatekeeper/dashboard_gatekeeper/bindings/dashboard_gatekeeper_binding.dart';
 import '../modules/gatekeeper/dashboard_gatekeeper/views/dashboard_gatekeeper_view.dart';
 import '../modules/gatekeeper/face_vertivication/bindings/face_vertivication_binding.dart';
@@ -20,8 +22,6 @@ import '../modules/moderator/dashboard_mod/bindings/dashboard_mod_binding.dart';
 import '../modules/moderator/dashboard_mod/views/dashboard_mod_view.dart';
 import '../modules/moderator/transcript/bindings/transcript_binding.dart';
 import '../modules/moderator/transcript/views/transcript_view.dart';
-import '../modules/user/payment/bindings/payment_binding.dart';
-import '../modules/user/payment/views/payment_view.dart';
 import '../modules/profil/bindings/profil_binding.dart';
 import '../modules/profil/views/profil_view.dart';
 import '../modules/speaker/QA_speak/bindings/q_a_speak_binding.dart';
@@ -38,12 +38,16 @@ import '../modules/user/events/bindings/events_binding.dart';
 import '../modules/user/events/views/events_view.dart';
 import '../modules/user/faceregistration/bindings/faceregistration_binding.dart';
 import '../modules/user/faceregistration/views/faceregistration_view.dart';
+import '../modules/user/facescanner/bindings/facescanner_binding.dart';
+import '../modules/user/facescanner/views/facescanner_view.dart';
 import '../modules/user/history/bindings/history_binding.dart';
 import '../modules/user/history/views/history_view.dart';
 import '../modules/user/live/bindings/live_binding.dart';
 import '../modules/user/live/views/live_view.dart';
 import '../modules/user/notifikasi/bindings/notifikasi_binding.dart';
 import '../modules/user/notifikasi/views/notifikasi_view.dart';
+import '../modules/user/payment/bindings/payment_binding.dart';
+import '../modules/user/payment/views/payment_view.dart';
 import '../modules/user/ticket/bindings/ticket_binding.dart';
 import '../modules/user/ticket/views/ticket_view.dart';
 
@@ -52,10 +56,10 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.LOGIN;
+  // static const INITIAL = Routes.LOGIN;
+  static const INITIAL = Routes.AUTH_SPLASH;
 
   static final routes = [
-   
     GetPage(
       name: _Paths.PROFIL,
       page: () => const ProfilView(),
@@ -106,11 +110,7 @@ class AppPages {
       page: () => const NotifikasiView(),
       binding: NotifikasiBinding(),
     ),
-    GetPage(
-      name: _Paths.QA,
-      page: () => const QaView(),
-      binding: QaBinding(),
-    ),
+    GetPage(name: _Paths.QA, page: () => const QaView(), binding: QaBinding()),
     GetPage(
       name: _Paths.TRANSCRIPT,
       page: () => const TranscriptView(),
@@ -168,15 +168,25 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.FACESCANNER,
-      page: () => const FacescannerView(),
+      page: () => const FaceScannerView(),
       binding: FacescannerBinding(),
       children: [
         GetPage(
           name: _Paths.FACESCANNER,
-          page: () => const FacescannerView(),
+          page: () => const FaceScannerView(),
           binding: FacescannerBinding(),
         ),
       ],
+    ),
+    GetPage(
+      name: _Paths.AUTH_SPLASH,
+      page: () => const SplashView(),
+      binding: AuthSplashBinding(),
+    ),
+    GetPage(
+      name: _Paths.AUTH_VERIFY_OTP,
+      page: () => const VerifyOtpView(),
+      binding: AuthVerifyOtpBinding(),
     ),
   ];
 }

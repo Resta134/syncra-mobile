@@ -1,189 +1,85 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-
 import '../controllers/faceregistration_controller.dart';
 
 class FaceregistrationView extends GetView<FaceregistrationController> {
-const FaceregistrationView({super.key});
+  const FaceregistrationView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Background terang Neumorphism
       appBar: AppBar(
-        title: Text('FaceregistrationView'),
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        title: const Text(
+          'Daftar Wajah',
+          style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         centerTitle: true,
+        automaticallyImplyLeading: false, // Hilangkan tombol back (karena dari sukses payment)
       ),
+      
       // =================================================================
       // BAGIAN BODY (Konten Utama)
       // =================================================================
       body: SafeArea(
-        // Bungkus SafeArea biar aman dari notch HP
         child: SingleChildScrollView(
-          // Biar aman kalau layar HP user kecil
-          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 1. AREA BULATAN SCAN MUKA (GAMBAR DALAM LINGKARAN + LASER)
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    clipBehavior:
-                        Clip.hardEdge, // <-- TAMBAHIN BARIS INI KUNCINYA
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Image.asset(
-                      'images/FACE.png',
-                      fit: BoxFit
-                          .cover, // Opsional: Biar gambarnya ngisi penuh area
-                    ),
+              // 1. AREA BULATAN SCAN MUKA
+              Container(
+                height: 220,
+                width: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blue.shade50,
+                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3), width: 2),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/FACE.png'), 
+                    fit: BoxFit.cover,
                   ),
-                  Container(
-                    // width: 280, // Sedikit disesuaikan biar proporsional di layar
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.blue.shade700,
-                        width: 2.0, // Ketebalan border biru luar
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blueAccent.withOpacity(0.15),
+                      blurRadius: 30,
+                      spreadRadius: 5,
                     ),
-                  ),
-                  // Garis laser scan biru di tengah
-                ],
+                  ],
+                ),
               ),
-
-              SizedBox(height: 24),
+              const SizedBox(height: 30),
 
               // 2. TEKS JUDUL & DESKRIPSI
-              Column(
-                children: [
-                  Text(
-                    'Face Recognition Registration', // Typo dibenerin dikit
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Register your face for a smoother\nevent access experience.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
+              const Text(
+                'Daftarkan Wajah Anda',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
               ),
-
-              SizedBox(height: 32),
-
-              // 3. CONTAINER PAPAN 1 (Faster, no queuing)
-              Container(
-                margin: EdgeInsets.only(bottom: 16),
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(
-                    0.1,
-                  ), // Opacity diturunin dikit biar teks terbaca jelas
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.blue.shade200,
-                    width: 1.5,
-                  ), // Border disoftkan
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Icon(
-                        Icons.bolt,
-                        color: Colors.white,
-                        size: 28,
-                      ), // Icons.petir diganti Icons.bolt
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Faster, no queuing',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Enter the event area simply by scanning your face in a matter of seconds.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black54,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 10),
+              Text(
+                'Pindai wajah Anda untuk akses masuk event\nyang lebih cepat tanpa antre.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.5),
               ),
+              const SizedBox(height: 40),
 
-              // 4. CONTAINER PAPAN 2 (Secure & encrypted)
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.blue.shade200, width: 1.5),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Icon(
-                        Icons.shield,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Secure & encrypted',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Your biometric data is secured using high-level encryption standards.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black54,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              // 3. CONTAINER PAPAN 1 (Lebih Cepat)
+              _buildFeatureCard(
+                icon: Icons.bolt_rounded,
+                title: 'Lebih Cepat, Tanpa Antre',
+                desc: 'Masuk ke area event hanya dengan memindai wajah Anda dalam hitungan detik.',
+              ),
+              const SizedBox(height: 16),
+
+              // 4. CONTAINER PAPAN 2 (Aman)
+              _buildFeatureCard(
+                icon: Icons.shield_rounded,
+                title: 'Aman & Terenkripsi',
+                desc: 'Data biometrik Anda dilindungi menggunakan standar enkripsi tingkat tinggi.',
               ),
             ],
           ),
@@ -191,71 +87,96 @@ const FaceregistrationView({super.key});
       ),
 
       // =================================================================
-      // BAGIAN BAWAH (Tombol Aksi)
+      // BAGIAN BAWAH (Tombol Aksi Kiri Kanan)
       // =================================================================
-      // Menggunakan bottomNavigationBar agar posisinya paten di bawah
       bottomNavigationBar: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.only(left: 24, right: 24, top: 15, bottom: 35),
         decoration: BoxDecoration(
           color: Colors.white,
-         
-          
+          boxShadow: [
+            BoxShadow(color: Colors.blueGrey.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, -5)),
+          ],
         ),
         child: SafeArea(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               SizedBox(
-                width: 200,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.goToTicket();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ), // Bikin oval/kapsul
-                  ),
-                  child: Text(
-                    'Skip for Now',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
+              // Tombol Skip (Pakai Expanded agar membagi rata sisa layar)
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: () => controller.goToTicket(),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.blueAccent, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    ),
+                    child: const Text(
+                      'Lewati', 
+                      style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                   ),
                 ),
               ),
-          
-              SizedBox(
-                width: 200,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.goToRegrestration();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ), // Bikin oval/kapsul
-                  ),
-                  child: Text(
-                    'Registration Now',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
+              const SizedBox(width: 15),
+              // Tombol Lanjut Registrasi
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => controller.goToRegrestration(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Daftar Sekarang', 
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                   ),
                 ),
               ),
-              // Tombol Lewati (Sekunder)
-               ],
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Fungsi helper agar kode desain Card tidak berulang-ulang
+  Widget _buildFeatureCard({required IconData icon, required String title, required String desc}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.blueGrey.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 5)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent.withOpacity(0.1), 
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: Colors.blueAccent, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                const SizedBox(height: 4),
+                Text(desc, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,193 +1,109 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-
+import 'package:mobile_scanner/mobile_scanner.dart'; // Pastikan package ini terinstall
 import '../controllers/qr_scanner_controller.dart';
 
 class QrScannerView extends GetView<QrScannerController> {
   const QrScannerView({super.key});
+
   @override
   Widget build(BuildContext context) {
-   return Scaffold(
-      // Background gelap premium selaras dengan mockup
-      backgroundColor: const Color(0xFF1A1C24),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          'Scan Ticket QR',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            children: [
-              const Spacer(),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // 1. Camera Preview sebagai Background
+          MobileScanner(
+            onDetect: (capture) {
+              final List<Barcode> barcodes = capture.barcodes;
+              for (final barcode in barcodes) {
+                controller.handleQrResult(barcode.rawValue ?? "");
+              }
+            },
+          ),
 
-              // ==========================================
-              // AREA FRAME KOTAK QR SCANNER + GARIS LASER
-              // ==========================================
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Kotak Scanner
-                  Container(
+          // 2. Overlay Gelap di luar frame scanner
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.srcOut),
+            child: Stack(
+              children: [
+                Container(decoration: const BoxDecoration(color: Colors.black, backgroundBlendMode: BlendMode.dstOut)),
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
                     width: 280,
                     height: 280,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05), // Dummy feed kamera gelap
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.blue.shade700,
-                        width: 3.0, // Aksentuasi border biru
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.15),
-                          blurRadius: 15,
-                          spreadRadius: 2,
-                        )
-                      ],
-                    ),
                   ),
-                  
-                  // Sudut penanda kotak (Aksen siku-siku biru)
-                  Positioned(
-                    top: 12, left: 12,
-                    child: _buildCornerAccent(),
-                  ),
-                  Positioned(
-                    top: 12, right: 12,
-                    child: RotatedBox(quarterTurns: 1, child: _buildCornerAccent()),
-                  ),
-                  Positioned(
-                    bottom: 12, right: 12,
-                    child: RotatedBox(quarterTurns: 2, child: _buildCornerAccent()),
-                  ),
-                  Positioned(
-                    bottom: 12, left: 12,
-                    child: RotatedBox(quarterTurns: 3, child: _buildCornerAccent()),
-                  ),
+                ),
+              ],
+            ),
+          ),
 
-                  // Garis Laser Scan Biru
-                  Container(
-                    width: 260,
-                    height: 3,
-                    color: Colors.blue.shade400,
+          // 3. UI Frame & Instruksi (di atas kamera)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  const Spacer(),
+                  _buildScannerFrame(),
+                  const SizedBox(height: 30),
+                  const Text(
+                    'Posisikan QR dalam kotak untuk scan',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
+                  const Spacer(flex: 2),
+                  _buildActionButtons(),
+                  const SizedBox(height: 20),
                 ],
               ),
-
-              const SizedBox(height: 24),
-
-              // TEKS INSTRUKSI BAWAH KOTAK
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Align QR code within the frame to scan\nautomatically',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              // ==========================================
-              // AREA TOMBOL BAWAH
-              // ==========================================
-              
-              // 1. Tombol Switch to Face Scan (Background Putih)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                   controller.vermuk();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.blue.shade700,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.face_retouching_natural, color: Colors.blue.shade700, size: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Switch to Face Scan',
-                        style: TextStyle(color: Colors.blue.shade700, fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-
-              // 2. Tombol Manual Name Search (Outlined / Gelap)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton(
-                  onPressed: () {
-                    // TODO: Arahkan ke halaman pencarian nama manual
-                    Get.snackbar('Manual Search', 'Membuka daftar pencarian nama peserta...');
-                    controller.goToValidation();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white54, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search, color: Colors.white, size: 20),
-                      SizedBox(width: 10),
-                      Text(
-                        'Manual Name Search',
-                        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  // Widget kecil untuk membuat sudut L di tiap pojok frame
-  Widget _buildCornerAccent() {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.blue, width: 4),
-          left: BorderSide(color: Colors.blue, width: 4),
-        ),
+  Widget _buildAppBar() => Row(
+    children: [
+      IconButton(
+        onPressed: () => Get.back(),
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
       ),
-    );
-  }
+      const Expanded(child: Text("Scan QR Tiket", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
+      const SizedBox(width: 48), // Spacer untuk keseimbangan
+    ],
+  );
+
+  Widget _buildScannerFrame() => Stack(
+    alignment: Alignment.center,
+    children: [
+      Container(width: 280, height: 280, decoration: BoxDecoration(borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.blue.shade400, width: 2))),
+      // Sudut L
+      ...List.generate(4, (index) => Positioned(
+        top: index < 2 ? 0 : null, bottom: index >= 2 ? 0 : null,
+        left: index == 0 || index == 3 ? 0 : null, right: index == 1 || index == 2 ? 0 : null,
+        child: Container(width: 40, height: 40, decoration: BoxDecoration(border: Border(top: index < 2 ? const BorderSide(color: Colors.blue, width: 5) : BorderSide.none, left: index == 0 || index == 3 ? const BorderSide(color: Colors.blue, width: 5) : BorderSide.none, bottom: index >= 2 ? const BorderSide(color: Colors.blue, width: 5) : BorderSide.none, right: index == 1 || index == 2 ? const BorderSide(color: Colors.blue, width: 5) : BorderSide.none))),
+      )),
+    ],
+  );
+
+  Widget _buildActionButtons() => Column(
+    children: [
+      ElevatedButton.icon(
+        onPressed: () => controller.vermuk(),
+        icon: const Icon(Icons.face_retouching_natural),
+        label: const Text("Ganti ke Face Scan"),
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.blue.shade900, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))),
+      ),
+      const SizedBox(height: 15),
+      OutlinedButton.icon(
+        onPressed: () => controller.goToValidation(),
+        icon: const Icon(Icons.search, color: Colors.white),
+        label: const Text("Cari Nama Manual", style: TextStyle(color: Colors.white)),
+        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white54), minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))),
+      ),
+    ],
+  );
 }

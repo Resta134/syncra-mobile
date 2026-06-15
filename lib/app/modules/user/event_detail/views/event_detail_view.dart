@@ -1,655 +1,539 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../controllers/event_detail_controller.dart';
 
 class EventDetailView extends GetView<EventDetailController> {
   const EventDetailView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Background terang Neumorphism
+      // AppBar Transparan agar menyatu dengan gambar header
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.9),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [Text(' ')],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF1E293B),
+              size: 20,
+            ),
+            onPressed: () => Get.back(),
+          ),
         ),
-        centerTitle: true,
       ),
+
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
+            // ==========================================
+            // 1. GAMBAR HEADER & STATUS EVENT
+            // ==========================================
             Stack(
               children: [
+                // Gambar Event dari Supabase
                 Container(
-                  height: 250,
+                  height: 300,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.blue[50],
                     image: DecorationImage(
-                      image: AssetImage("images/background-card.jpg"),
+                      image: controller.imageUrl.isNotEmpty
+                          ? NetworkImage(controller.imageUrl) as ImageProvider
+                          : const AssetImage(
+                              "assets/images/placeholder.png",
+                            ), // Gambar cadangan
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
+                // Gradien Hitam di Bawah Gambar agar Teks Terbaca
                 Container(
-                  height: 250,
+                  height: 300,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.black.withOpacity(0.4),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.8),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+                // Badge Status & Judul
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: controller.status == 'LIVE'
+                              ? Colors.redAccent
+                              : Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (controller.status == 'LIVE')
+                              const Icon(
+                                Icons.circle,
+                                size: 8,
+                                color: Colors.white,
+                              ),
+                            if (controller.status == 'LIVE')
+                              const SizedBox(width: 6),
+                            Text(
+                              controller.status == 'UPCOMING'
+                                  ? 'MENDATANG'
+                                  : controller.status,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        controller.title,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
 
-            SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    controller.eventDetails[0]['title']!,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.all(8),
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.red[600],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.circle, size: 10, color: Colors.white),
-                        SizedBox(width: 10),
-                        Text(
-                          controller.sistem[0]['status1']!,
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // date dan location
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Container(
-                    width: 200,
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey[400]!, width: 2),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: Colors.blue[700],
-                          size: 20,
-                        ),
-                        SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Date",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            Text(
-                              controller.date_location[0]['date']!,
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Container(
-                    width: 200,
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey[400]!, width: 2),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.blue[700],
-                          size: 20,
-                        ),
-                        SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Location",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            Text(
-                              "San Francisco, CA",
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20),
-            // deskripsi
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.yellow[700],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(MdiIcons.informationVariant),
-                      ),
-                      Text(
-                        "About Event",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(),
-                  SizedBox(height: 8),
-                  Text(
-                    controller.eventDetails[0]['description']!,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 30),
-            //Pembicara
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(MdiIcons.accountTie),
-                      ),
-                      Text(
-                        "Speaker",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.blue.withOpacity(0.3)
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(foregroundColor: Colors.blueAccent,),SizedBox(width: 10,),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                         
-                          children: [
-                            Text(
-                              controller.eventDetails[0]['author']!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                            ),
-                            Text(
-                              controller.eventDetails[0]['role']!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                            ),
-                          ],
-                        ),
-                     ],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    padding: EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.blue.withOpacity(0.3)
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(foregroundColor: Colors.blueAccent,),SizedBox(width: 10,),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              controller.eventDetails[0]['author']!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                            ),
-                            Text(
-                              controller.eventDetails[0]['role']!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                            ),
-                          ],
-                        ),
-                     ],
-                    ),
-                  ),
-                
-                  SizedBox(height: 20),
-                  Container(
-                    padding: EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.blue.withOpacity(0.3)
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(foregroundColor: Colors.blueAccent,),SizedBox(width: 10,),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                         
-                          children: [
-                            Text(
-                              controller.eventDetails[0]['author']!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                            ),
-                            Text(
-                              controller.eventDetails[0]['role']!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-                            ),
-                          ],
-                        ),
-                     ],
-                    ),
-                  ),
-                
-                ],
-              ),
-            ),
-            SizedBox(height: 30),
-
-            SizedBox(height: 20),
-
             // ==========================================
-            // LOGIKA GETX: TAMPIL BERGANTIAN
+            // 2. KARTU JADWAL, LOKASI & HARGA
             // ==========================================
-            SizedBox(height: 40),
-          ],
-        ),
-      ),
-      bottomSheet: SafeArea(
-        child: Padding(
-          padding:  EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            margin: EdgeInsets.only(bottom: 20),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: EdgeInsets.all(15)
-              ),
-              onPressed: () {
-                controller.goToPembayaran();
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                   Icon(Icons.confirmation_num_outlined, color: Colors.white,size: 20,),
-                   SizedBox(width: 5,),
-                  Text('Continue to Payment',style: TextStyle(color: Colors.white, fontSize: 18),),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTicketPurchased() {
-    return Column(
-      children: [
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: Colors.white12,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[400]!, width: 2),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 12),
+            Transform.translate(
+              offset: const Offset(0, -10),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(15), 
                 decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blueGrey.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.check_box_outlined,
-                      color: Colors.white,
-                      size: 20,
+                    // Kolom Jadwal
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Icon(Icons.calendar_month_rounded, color: Colors.blue[700], size: 20),
+                          const SizedBox(height: 4),
+                          Text("Jadwal", style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                          const SizedBox(height: 2),
+                          Text(
+                            controller.eventDateTime,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(width: 8),
-                    Text(
-                      controller.user[0]['ticket1']!,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        letterSpacing: 0.5,
+                    Container(height: 35, width: 1, color: Colors.grey[200]),
+                    
+                    // Kolom Lokasi
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Icon(Icons.location_on_rounded, color: Colors.orange[700], size: 20),
+                          const SizedBox(height: 4),
+                          Text("Lokasi", style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                          const SizedBox(height: 2),
+                          Text(
+                            controller.location,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(height: 35, width: 1, color: Colors.grey[200]),
+                    
+                    // Kolom Harga Tiket
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Icon(Icons.confirmation_number_rounded, color: Colors.green[700], size: 20),
+                          const SizedBox(height: 4),
+                          Text("Harga", style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                          const SizedBox(height: 2),
+                          Text(
+                            controller.eventPrice, 
+                            style: TextStyle(
+                              fontSize: 12, 
+                              fontWeight: FontWeight.bold, 
+                              color: controller.eventPrice == 'Gratis' ? Colors.green[700] : const Color(0xFF1E293B)
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(20.0),
+            ),
+            const SizedBox(height: 10),
+
+            // ==========================================
+            // 3. DESKRIPSI EVENT
+            // ==========================================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Tentang Event",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    controller.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      height: 1.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // ==========================================
+            // 3.5. DAFTAR PEMATERI / SPEAKER
+            // ==========================================
+            Obx(() {
+              if (controller.speaker1.value.isEmpty) return const SizedBox.shrink();
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            controller.user[0]['avatar']!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          controller.user[0]['name']!,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      "Pemateri",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
                     ),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 15),
+                    
+                    // Speaker 1 (Wajib)
+                    _buildSpeakerTile(controller.speaker1.value),
+                    
+                    // Speaker 2 (Opsional)
+                    if (controller.speaker2.value.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _buildSpeakerTile(controller.speaker2.value),
+                    ],
+
+                    // Speaker 3 (Opsional)
+                    if (controller.speaker3.value.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _buildSpeakerTile(controller.speaker3.value),
+                    ],
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 30),
+
+            // ==========================================
+            // 4. PEMBICARA / PENYELENGGARA
+            // ==========================================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Penyelenggara",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.grey.shade100),
+                    ),
+                    child: Row(
                       children: [
-                        Text(
-                          "Ticket ID",
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
-                        ),
-                        Text(
-                          controller.user[0]['ticket_id']!,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Colors.black87,
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.blue[100],
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.blueAccent,
                           ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Face Verification",
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
-                        ),
-                        Row(
+                        const SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: Color(0xFF34A853),
-                              size: 18,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              "COMPLETE",
+                            const Text(
+                              "Admin Syncra", 
                               style: TextStyle(
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF34A853),
-                                fontSize: 14,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Penyelenggara Acara",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    Divider(),
-                    SizedBox(height: 30),
-                    Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.qr_code_2,
-                            size: 160,
-                            color: Colors.black87,
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            "Scan this QR code at the event entrance",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black87,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        Padding(
-          padding: EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: 230,
-            height: 40,
-            child: ElevatedButton(
-              onPressed: () {
-                controller.goToLive();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[900],
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.live_tv, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text('Join Live Room', style: TextStyle(color: Colors.white)),
+                  ),
                 ],
               ),
             ),
-          ),
+            const SizedBox(height: 40),
+
+            // ==========================================
+            // 5. STATUS TIKET (LOGIKA GETX)
+            // ==========================================
+            Obx(() {
+              if (controller.hasTicket.value) {
+                return _buildTicketPurchased();
+              } else {
+                return _buildTicketRequired();
+              }
+            }),
+
+            const SizedBox(height: 100), 
+          ],
         ),
-      ],
+      ),
+
+      // ==========================================
+      // TOMBOL BAYAR BAWAH MELAYANG + HARGA TOTAL
+      // ==========================================
+      bottomNavigationBar: Obx(() {
+        if (!controller.hasTicket.value) {
+          return Container(
+            padding: const EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 15,
+              bottom: 35, 
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blueGrey.withOpacity(0.08),
+                  blurRadius: 15,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Total Harga', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                        const SizedBox(height: 2),
+                        Text(
+                          controller.eventPrice,
+                          style: const TextStyle(
+                            color: Color(0xFF1E293B),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          elevation: 0,
+                        ),
+                        onPressed: () => controller.goToPembayaran(), 
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.payment_rounded, color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Beli Tiket', 
+                              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          return const SizedBox.shrink();
+        }
+      }),
     );
   }
 
   // ==========================================
-  // UI 2: BELUM PUNYA TIKET (BUY TICKET + LOCKED LIVE)
+  // WIDGET UI: SUDAH BELI TIKET
   // ==========================================
-  Widget _buildTicketRequired() {
-    return Column(
-      children: [
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: Color(0xFFFFF8E1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFD6A033), width: 2),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Color(0xFFD6A033),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(14),
-                    topRight: Radius.circular(14),
-                  ),
+  Widget _buildTicketPurchased() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blueGrey.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-                child: Center(
-                  child: Text(
-                    "TICKET REQUIRED",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      letterSpacing: 1.0,
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF34A853),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
                   ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 22),
+                      SizedBox(width: 8),
+                      Text(
+                        "TIKET TERKONFIRMASI",
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    Center(
-                      child: Column(
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            Icons.confirmation_num_outlined,
-                            size: 140,
-                            color: Colors.black87,
+                          const Text("ID Tiket", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                          Obx(
+                            () => Text(
+                              controller.ticketCode.value,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        controller.buyTicket();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFD6A033),
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      const Divider(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Verifikasi Wajah", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                          Row(
+                            children: [
+                              const Icon(Icons.check_circle, color: Color(0xFF34A853), size: 18),
+                              const SizedBox(width: 4),
+                              const Text(
+                                "SELESAI",
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF34A853), fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        'BUY NOW',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Complete your purchase to access your QR code.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        Padding(
-          padding: EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: 230,
-            height: 50,
-            child: Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Panggil fungsi snackbar terkunci
-                    if (Get.isRegistered<EventDetailController>()) {
-                      Get.snackbar('Locked', 'Please buy a ticket first!');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.lock, color: Colors.white, size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        'Locked Join Live Room',
-                        style: TextStyle(color: Colors.white),
+                      const SizedBox(height: 30),
+                      const Icon(Icons.qr_code_2_rounded, size: 150, color: Color(0xFF1E293B)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Scan QR code ini di pintu masuk event",
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
@@ -657,8 +541,140 @@ class EventDetailView extends GetView<EventDetailController> {
               ],
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 25),
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: ElevatedButton.icon(
+              onPressed: () => controller.goToLive(),
+              icon: const Icon(Icons.live_tv_rounded, color: Colors.white),
+              label: const Text(
+                'Gabung Ruang Live',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // WIDGET UI: BELUM PUNYA TIKET
+  // ==========================================
+  Widget _buildTicketRequired() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1), 
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFD6A033).withOpacity(0.5), width: 1.5),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD6A033),
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(18), topRight: Radius.circular(18)),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "MEMBUTUHKAN TIKET",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.confirmation_num_outlined, size: 100, color: Color(0xFFD6A033)),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Selesaikan pembelian untuk mendapatkan QR Code akses event Anda.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: () => controller.lockticket(),
+              icon: const Icon(Icons.lock_rounded, color: Colors.white, size: 20),
+              label: const Text('Ruang Live Terkunci', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade400,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // WIDGET BANTUAN UNTUK ITEM PEMATERI
+  // ==========================================
+  Widget _buildSpeakerTile(String name) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueGrey.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange[50],
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.mic_rounded,
+              color: Colors.orangeAccent,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

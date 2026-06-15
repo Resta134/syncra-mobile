@@ -1,152 +1,57 @@
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EventsController extends GetxController {
-  //TODO: Implement EventsController
+  // Inisialisasi Supabase
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  final upcomingEventsData = [
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 10:00 AM',
-    'titleupcoming': 'AI in Everyday Life: We Walk the Talk',
-    'authorUp': 'Dr. Mulyono',
-    'location': 'Jakarta',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 11:30 AM',
-    'titleupcoming': 'UX/UI Patterns for Modern Applications',
-    'authorUp': 'Dr. Bowo',
-    'location': 'Bandung',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 01:00 PM',
-    'titleupcoming': 'Global Market Trends in the AI Era',
-    'authorUp': 'Dr. Mega',
-    'location': 'Bekasi',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 02:30 PM',
-    'titleupcoming': 'Cyber Security in the Digital Age',
-    'authorUp': 'Dr. Jonathan',
-    'location': 'Surabaya',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 04:00 PM',
-    'titleupcoming': 'Building Scalable Mobile Applications',
-    'authorUp': 'Dr. Sarah',
-    'location': 'Yogyakarta',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 05:00 PM',
-    'titleupcoming': 'Future of Artificial Intelligence',
-    'authorUp': 'Dr. Kevin',
-    'location': 'Depok',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 06:30 PM',
-    'titleupcoming': 'Machine Learning for Beginners',
-    'authorUp': 'Dr. Alicia',
-    'location': 'Bogor',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 07:00 PM',
-    'titleupcoming': 'Digital Branding and Social Media',
-    'authorUp': 'Dr. Fernando',
-    'location': 'Semarang',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 08:00 PM',
-    'titleupcoming': 'Cloud Computing Fundamentals',
-    'authorUp': 'Dr. William',
-    'location': 'Malang',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Tomorrow, 09:00 PM',
-    'titleupcoming': 'Smart Cities and AI Innovation',
-    'authorUp': 'Dr. Felicia',
-    'location': 'Tangerang',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 09:00 AM',
-    'titleupcoming': 'The Rise of Fintech Technology',
-    'authorUp': 'Dr. Dimas',
-    'location': 'Medan',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 10:30 AM',
-    'titleupcoming': 'AI for Healthcare Systems',
-    'authorUp': 'Dr. Michelle',
-    'location': 'Batam',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 12:00 PM',
-    'titleupcoming': 'Creative Thinking in Product Design',
-    'authorUp': 'Dr. Clara',
-    'location': 'Solo',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 01:30 PM',
-    'titleupcoming': 'Data Science and Visualization',
-    'authorUp': 'Dr. Rizky',
-    'location': 'Makassar',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 03:00 PM',
-    'titleupcoming': 'Business Strategy with AI',
-    'authorUp': 'Dr. Vanessa',
-    'location': 'Cirebon',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 04:30 PM',
-    'titleupcoming': 'Cyber Ethics and Digital Privacy',
-    'authorUp': 'Dr. Ahmad',
-    'location': 'Bali',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 06:00 PM',
-    'titleupcoming': 'Modern Front-End Development',
-    'authorUp': 'Dr. Putra',
-    'location': 'Palembang',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 07:30 PM',
-    'titleupcoming': 'AI for Content Creation',
-    'authorUp': 'Dr. Jessica',
-    'location': 'Pontianak',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 08:30 PM',
-    'titleupcoming': 'Future Careers in Technology',
-    'authorUp': 'Dr. Reza',
-    'location': 'Samarinda',
-  },
-  {
-    'thumbnail': 'images/profil.png',
-    'time': 'Friday, 09:30 PM',
-    'titleupcoming': 'Interactive Design Systems',
-    'authorUp': 'Dr. Cindy',
-    'location': 'Pekalongan',
-  },
-].obs;
+  // Variabel penampung data (sekarang dinamis menyesuaikan database)
+  var upcomingEventsData = <Map<String, dynamic>>[].obs;
+  var isLoading = true.obs; // Untuk animasi muter-muter (loading)
 
- void goToEventDetail(){
-  Get.toNamed('/event-detail');
- }
+  @override
+  void onInit() {
+    super.onInit();
+    // Tarik data otomatis begitu halaman "Semua Event" dibuka
+    fetchUpcomingEvents();
+  }
+
+  // Fungsi untuk menarik data dari Supabase
+  Future<void> fetchUpcomingEvents() async {
+    try {
+      isLoading.value = true;
+
+      // PERUBAHAN DI SINI: Gunakan .ilike alih-alih .eq
+      // .ilike akan mengabaikan huruf besar/kecil, jadi "Upcoming", "UPCOMING", dll akan terbaca
+      final List<dynamic> response = await _supabase
+          .from('events')
+          .select()
+          .ilike(
+            'status',
+            '%upcoming%',
+          ); // Ditambah % % untuk berjaga-jaga kalau ada spasi yang tidak sengaja terketik di database
+
+      upcomingEventsData.clear();
+
+      for (var event in response) {
+        upcomingEventsData.add(event as Map<String, dynamic>);
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Terjadi Kesalahan",
+        "Gagal memuat daftar event.",
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      print("Error ambil data: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Fungsi navigasi yang sudah di-update agar MEMBAWA DATA
+  void goToEventDetail(Map<String, dynamic> eventData) {
+    // Rute pindah halaman sambil melempar 'arguments' ke halaman detail
+    Get.toNamed('/event-detail', arguments: eventData);
+  }
 }

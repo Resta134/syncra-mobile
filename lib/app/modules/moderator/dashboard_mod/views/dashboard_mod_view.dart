@@ -1,242 +1,126 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
-
 import '../controllers/dashboard_mod_controller.dart';
 
 class DashboardModView extends GetView<DashboardModController> {
   const DashboardModView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF0F4F8,
-      ), // Warna background abu-abu kebiruan terang
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        automaticallyImplyLeading: false,//hapus arrow
-        backgroundColor: Colors.white.withOpacity(0.9),
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 1,
         title: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
+              width: 35, height: 35,
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage("images/image.png"),
-                  fit: BoxFit.cover,
-                ),
+                image: DecorationImage(image: AssetImage("assets/images/image.png"), fit: BoxFit.cover),
               ),
             ),
-            Text("synCra App"),
+            const SizedBox(width: 10),
+            const Text("synCra App", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
           ],
         ),
-        elevation: 2, // Biar ada bayangan tipis
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.only(right: 15.0),
             child: IconButton(
               onPressed: () => controller.goToNotifikasi(),
-              icon: Icon(
-                Icons.notifications_active,
-                color: Colors.blue[700],
-                size: 25,
-              ),
+              icon: const Icon(Icons.notifications_active, color: Color(0xFF0038FF)),
             ),
           ),
         ],
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Navigation Cards
-            _buildNavCard(
-              icon: Icons.monitor_heart_outlined,
-              title: 'Live Transcript Monitor',
-              onTap: () {
-                controller.goToTranscript();
-              },
-            ),
-            SizedBox(height: 12),
-            _buildNavCard(
-              icon: Icons.forum_outlined,
-              title: 'Q&A Curation Queue',
-              onTap: () {
-                controller.goToQA();
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // 2. Broadcast Center Section
-            const Text(
-              'Broadcast Center',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildBroadcastCard(),
-
-            const SizedBox(height: 24),
-
-            // Server Status (Opsional, dibiarkan sebagai footer)
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.circle, color: Colors.green, size: 10),
-                  SizedBox(width: 6),
-                  Text(
-                    'Server Optimal',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // Nav Cards
+          Row(
+            children: [
+              Expanded(child: _buildNavCard(Icons.monitor, "Transcript", () => controller.goToTranscript())),
+              const SizedBox(width: 15),
+              Expanded(child: _buildNavCard(Icons.forum, "Q&A Queue", () => controller.goToQA())),
+            ],
+          ),
+          const SizedBox(height: 30),
+          const Text("Broadcast Center", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 15),
+          _buildEnhancedBroadcastCard(),
+        ],
       ),
-      bottomNavigationBar: const CustomBottomNavBar(
-        currentIndex: 0,
-        role: 'moderator', // <-- Kasih tahu ini punya moderator
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0, role: 'moderator'),
     );
   }
 
-  // Widget Builder untuk Navigation Card
-  Widget _buildNavCard({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildNavCard(IconData icon, String title, VoidCallback onTap) {
     return InkWell(
-      // <-- TAMBAHKAN INKWELL AGAR BISA DI-KLIK
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        height: 110,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF0038FF)), // Biru aksen
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
+            Icon(icon, size: 30, color: const Color(0xFF0038FF)),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
   }
 
-  // Widget Builder untuk Broadcast Center Card
-  Widget _buildBroadcastCard() {
+  Widget _buildEnhancedBroadcastCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
-              Icon(Icons.campaign_outlined, color: Color(0xFF1E293B)),
-              SizedBox(width: 8),
-              Text(
-                'Custom Broadcast',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
+          TextField(
+            controller: controller.broadcastController,
+            maxLines: 3,
+            decoration: const InputDecoration(hintText: "Tulis pesan broadcast...", border: InputBorder.none),
+          ),
+          const Divider(),
+          const Text("Pilih Template:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildTemplateChip("Sesi dimulai 5 menit lagi"),
+              _buildTemplateChip("Waktu Q&A sisa 10 menit"),
+              _buildTemplateChip("Mohon tenang saat sesi berlangsung"),
+              _buildTemplateChip("Terima kasih atas partisipasinya"),
             ],
           ),
-          const SizedBox(height: 16),
-          TextField(
-            maxLines: 4,
-            maxLength: 150,
-            decoration: InputDecoration(
-              hintText: 'Type your message here...',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF0038FF)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.send, size: 18),
-              label: const Text('Send Broadcast'),
+          const SizedBox(height: 15),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => controller.sendBroadcast(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0038FF), // Biru tombol
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
+                backgroundColor: const Color(0xFF0038FF),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Quick Broadcast Templates',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildTemplateChip('Session start in 5m'),
-                const SizedBox(width: 8),
-                _buildTemplateChip('10m left for Q&A'),
-                const SizedBox(width: 8),
-                _buildTemplateChip('Thanks for Q&A'),
-              ],
+              child: const Text("Kirim Sekarang", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -244,19 +128,14 @@ class DashboardModView extends GetView<DashboardModController> {
     );
   }
 
-  // Widget Builder untuk Template Chip
   Widget _buildTemplateChip(String label) {
-    return ActionChip(
-      label: Text(label),
-      labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey.shade300),
+    return InkWell(
+      onTap: () => controller.fillBroadcast(label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(10)),
+        child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF0038FF), fontWeight: FontWeight.w500)),
       ),
-      onPressed: () {
-        // TODO: Logika untuk mengisi textfield dengan template ini
-      },
     );
   }
 }

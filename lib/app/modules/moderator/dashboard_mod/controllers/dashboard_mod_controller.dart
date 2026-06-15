@@ -1,22 +1,34 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DashboardModController extends GetxController {
-  //TODO: Implement DashboardModController
+  final TextEditingController broadcastController = TextEditingController();
 
-   void goToTranscript() {
-    print('sudah klik transcripts');
-    Get.toNamed('/transcript');
+  void goToTranscript() => Get.toNamed('/transcript');
+  void goToQA() => Get.toNamed('/qa');
+  void goToNotifikasi() => Get.toNamed('/notifikasi');
+  void goToProfil() => Get.toNamed('/profil');
+
+  // Fitur Broadcast
+  void fillBroadcast(String message) {
+    broadcastController.text = message;
   }
-   void goToQA() {
-    print('sudah klik qa');
-    Get.toNamed('/qa');
+
+  void sendBroadcast() {
+    if (broadcastController.text.trim().isNotEmpty) {
+      Get.snackbar(
+        "Berhasil", 
+        "Pesan broadcast telah dikirim ke peserta",
+        backgroundColor: Colors.blue.shade50,
+        snackPosition: SnackPosition.BOTTOM
+      );
+      broadcastController.clear();
+    }
   }
-  void goToNotifikasi() {
-    print("Membuka halaman profil...");
-    Get.toNamed('/notifikasi');
-  }
-   void goToProfil() {
-    print("Membuka halaman profil...");
-    Get.toNamed('/profil');
+
+  @override
+  void onClose() {
+    broadcastController.dispose();
+    super.onClose();
   }
 }

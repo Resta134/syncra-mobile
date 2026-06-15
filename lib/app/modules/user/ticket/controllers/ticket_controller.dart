@@ -1,155 +1,288 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tranlator_v1/app/modules/user/event_detail/controllers/event_detail_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TicketController extends GetxController {
-  //TODO: Implement TicketController
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  
-  void goToLive(){
-    Get.toNamed('/live');
+  // State Loading saat mengambil data
+  var isLoading = true.obs;
+
+  // Menyimpan daftar tiket berdasarkan status (Otomatis dipisah)
+  var upcomingTickets = <Map<String, dynamic>>[].obs;
+  var completedTickets = <Map<String, dynamic>>[].obs;
+
+  // Data Profil User untuk ditampilkan di QR Code
+  var userName = 'User Syncra'.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    getUserProfile();
+    fetchMyTickets();
   }
-  final user = [
-    {
-      'name': 'Rhiki Sulistiyo',
-      'avatar': 'images/profil.png',
-      'ticket1': 'TICKET CONFIRMATION',
-      'ticket2': 'TICKET REQUIRED',
-      'ticket_id': 'SYNCRA-102062023',
-    },
-  ].obs;
-  
-  String get userName => user[0]['name'] ?? 'User';
-  String get ticketID => user[0]['ticket_id'] ?? '-';
 
-void popUp() {
+  // ==========================================
+  // 1. Ambil Nama User dari Sesi Login
+  // ==========================================
+  void getUserProfile() {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      userName.value =
+          user.userMetadata?['full_name'] ??
+          user.userMetadata?['name'] ??
+          'User Syncra';
+    }
+  }
+
+  // ==========================================
+  // 2. Ambil Data Tiket & Event dari Supabase
+  // ==========================================
+  Future<void> fetchMyTickets() async {
+    try {
+      isLoading.value = true;
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      // Query Join: Mengambil tiket milik user beserta detail event-nya
+      final response = await _supabase
+          .from('tickets')
+          .select('''
+        ticket_code,
+        event_id,
+        events (
+          id,
+          title,
+          event_date,
+          event_time,
+          status,
+          speaker_1
+        )
+      ''')
+          .eq('user_id', userId);
+
+      final List<Map<String, dynamic>> upcoming = [];
+      final List<Map<String, dynamic>> completed = [];
+
+      for (var item in response) {
+        final eventData = item['events'];
+        if (eventData == null)
+          continue; // Lewati jika data event terhapus/hilang
+
+        final ticketInfo = {
+          'ticket_code': item['ticket_code'] ?? '-',
+          'title': eventData['title'] ?? 'Tanpa Judul',
+          'date': eventData['event_date'] ?? '',
+          'time': eventData['event_time'] ?? '',
+          'status': eventData['status'] ?? 'Upcoming',
+          'speaker': eventData['speaker_1'] ?? 'Admin Syncra',
+          'event_id': eventData['id'],
+        };
+
+        // Pisahkan ke dalam list berdasarkan status event
+        final status = ticketInfo['status'].toString().toUpperCase();
+        if (status == 'COMPLETED') {
+          completed.add(ticketInfo);
+        } else {
+          upcoming.add(ticketInfo);
+        }
+      }
+
+      // Masukkan ke variabel state GetX
+      upcomingTickets.value = upcoming;
+      completedTickets.value = completed;
+    } catch (e) {
+      print("Error Fetch Tickets: $e");
+      Get.snackbar(
+        'Error',
+        'Gagal memuat tiket Anda.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ==========================================
+  // 3. POP-UP QR CODE (Dibuat Dinamis & Bahasa Indonesia)
+  // ==========================================
+  void popUp(String ticketId, String eventTitle) {
     Get.dialog(
-      // Gunakan widget Dialog agar otomatis terpusat di tengah dengan rapi
       Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        backgroundColor: Colors.white,
-        // Pembungkus scroll jika layar HP terlalu kecil
-        child: SingleChildScrollView( 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.transparent,
+        child: SingleChildScrollView(
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20), // Semua sudut melengkung karena di tengah
+              borderRadius: BorderRadius.circular(20),
             ),
-            padding: EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.only(bottom: 20),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Kunci agar tinggi dialog pas dengan isi konten
+              mainAxisSize: MainAxisSize.min,
               children: [
-                
                 // --- CONTAINER TIKET ATAS ---
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 16.0,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey[400]!, width: 1),
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
                   ),
                   child: Column(
                     children: [
                       // Header Hijau
                       Container(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF34A853),
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(15),
                             topRight: Radius.circular(15),
                           ),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.check_box_outlined, color: Colors.white, size: 20),
+                            Icon(
+                              Icons.check_box_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                             SizedBox(width: 8),
                             Text(
-                              user[0]['ticket1']!,
+                              "KONFIRMASI TIKET", // <-- Bahasa Indonesia
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 14,
                                 letterSpacing: 0.5,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      
+
                       // Isi Detail Tiket & QR Code
                       Padding(
-                        padding: EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.all(20.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Event Title (Tetap dinamis dari database)
+                            Center(
+                              child: Text(
+                                eventTitle,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                  color: Color(0xFF1E293B),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const Divider(height: 30),
+
+                            // Profil Info
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(
-                                    user[0]['avatar']!,
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.cover,
+                                CircleAvatar(
+                                  backgroundColor: Colors.blue[100],
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.blueAccent,
                                   ),
                                 ),
-                                SizedBox(width: 12),
-                                Text(
-                                  user[0]['name']!,
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                const SizedBox(width: 12),
+                                Obx(
+                                  () => Text(
+                                    userName.value,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
+                            const SizedBox(height: 20),
+
+                            // ID Tiket
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text("Ticket ID", style: TextStyle(fontSize: 14)),
+                                const Text(
+                                  "ID Tiket",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ), // <-- Bahasa Indonesia
                                 Text(
-                                  user[0]['ticket_id']!,
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  ticketId,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF1E293B),
+                                  ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
-                            Row(
+                            const SizedBox(height: 15),
+
+                            // Verifikasi
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text("Face Verification", style: TextStyle(fontSize: 14)),
+                                Text(
+                                  "Verifikasi Wajah",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ), // <-- Bahasa Indonesia
                                 Row(
                                   children: [
-                                    Icon(Icons.check_circle, color: Color(0xFF34A853), size: 18),
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFF34A853),
+                                      size: 16,
+                                    ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "COMPLETE",
+                                      "SELESAI", // <-- Bahasa Indonesia
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF34A853),
-                                        fontSize: 14,
+                                        fontSize: 12,
                                       ),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                            Divider(height: 20),
-                            SizedBox(height: 10),
-                            
-                            // Bagian QR Code Besar
+                            const Divider(height: 30),
+
+                            // Bagian QR Code
                             Center(
                               child: Column(
                                 children: [
-                                  Icon(Icons.qr_code_2, size: 250, color: Colors.black87),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    "Scan this QR code at the event entrance",
+                                  const Icon(
+                                    Icons.qr_code_2,
+                                    size: 200,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    "Pindai QR Code ini di pintu masuk acara", // <-- Bahasa Indonesia
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 12, height: 1.4),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -165,20 +298,16 @@ void popUp() {
           ),
         ),
       ),
-      
-      // --- PENGATURAN BACKGROUND & PERILAKU DIALOG ---
-      barrierDismissible: true, // TRUE = Klik sembarang area di luar pop-up akan menutupnya
-      barrierColor: Colors.black.withOpacity(0.9), // Background belakang warna putih transparan (opacity 0.5)
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.85),
     );
   }
-  void goToDashboard(){
-    Get.toNamed('/dashboard');
-  }
-  void goToProfil(){
-    Get.toNamed('/profil');
-  }
-  void goToTicket(){
-    Get.toNamed('/ticket');
-  }
-}
 
+  // ==========================================
+  // Navigasi
+  // ==========================================
+  void goToLive() => Get.toNamed('/live');
+  void goToDashboard() => Get.toNamed('/dashboard');
+  void goToProfil() => Get.toNamed('/profil');
+  void goToTicket() => Get.toNamed('/ticket');
+}
