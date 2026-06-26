@@ -24,6 +24,8 @@ import '../modules/moderator/transcript/bindings/transcript_binding.dart';
 import '../modules/moderator/transcript/views/transcript_view.dart';
 import '../modules/profil/bindings/profil_binding.dart';
 import '../modules/profil/views/profil_view.dart';
+import '../modules/user/scan_page/bindings/scan_page_binding.dart';
+import '../modules/user/scan_page/views/scan_page_view.dart';
 import '../modules/speaker/QA_speak/bindings/q_a_speak_binding.dart';
 import '../modules/speaker/QA_speak/views/q_a_speak_view.dart';
 import '../modules/speaker/dashboard_speak/bindings/dashboard_speak_binding.dart';
@@ -187,6 +189,11 @@ class AppPages {
       name: _Paths.AUTH_VERIFY_OTP,
       page: () => const VerifyOtpView(),
       binding: AuthVerifyOtpBinding(),
+    ),
+    GetPage(
+      name: _Paths.SCAN_PAGE,
+      page: () => const ScanPageView(),
+      binding: ScanPageBinding(),
     ),
   ];
 }

@@ -13,6 +13,7 @@ class DashboardGatekeeperView extends GetView<DashboardGatekeeperController> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
+        automaticallyImplyLeading: false, // Menghilangkan tombol arrow/back
         title: Column(
           children: [
             const Text('Dashboard Gatekeeper', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -21,6 +22,7 @@ class DashboardGatekeeperView extends GetView<DashboardGatekeeperController> {
         ),
         centerTitle: true,
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(

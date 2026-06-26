@@ -1,3 +1,5 @@
+// REGISTRASI
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -5,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'package:image/image.dart' as img; // Alias untuk membedakan dengan Image Flutter
+import 'package:image/image.dart'
+    as img; // Alias untuk membedakan dengan Image Flutter
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FaceScannerController extends GetxController {
@@ -58,7 +61,8 @@ class FaceScannerController extends GetxController {
 
       cameraController = CameraController(
         frontCamera,
-        ResolutionPreset.medium, // Medium lebih aman untuk image processing realtime
+        ResolutionPreset
+            .medium, // Medium lebih aman untuk image processing realtime
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.yuv420,
       );
@@ -79,7 +83,7 @@ class FaceScannerController extends GetxController {
 
   Future<void> loadTFLiteModel() async {
     try {
-      interpreter = await Interpreter.fromAsset('assets/models/mobilefacenet.tflite');
+      interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite');
       print("TFLite Model Berhasil Dimuat!");
     } catch (e) {
       print("Gagal memuat TFLite Model: $e");
@@ -97,12 +101,18 @@ class FaceScannerController extends GetxController {
       }
       final bytes = allBytes.done().buffer.asUint8List();
 
-      final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-      final imageRotation = InputImageRotationValue.fromRawValue(
-              cameraController!.description.sensorOrientation) ??
+      final Size imageSize = Size(
+        image.width.toDouble(),
+        image.height.toDouble(),
+      );
+      final imageRotation =
+          InputImageRotationValue.fromRawValue(
+            cameraController!.description.sensorOrientation,
+          ) ??
           InputImageRotation.rotation270deg;
 
-      final inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw) ??
+      final inputImageFormat =
+          InputImageFormatValue.fromRawValue(image.format.raw) ??
           InputImageFormat.nv21;
 
       final metadata = InputImageMetadata(
@@ -121,7 +131,8 @@ class FaceScannerController extends GetxController {
       } else {
         final face = faces.first;
 
-        if (face.leftEyeOpenProbability != null && face.rightEyeOpenProbability != null) {
+        if (face.leftEyeOpenProbability != null &&
+            face.rightEyeOpenProbability != null) {
           final leftEyeOpen = face.leftEyeOpenProbability!;
           final rightEyeOpen = face.rightEyeOpenProbability!;
 
@@ -132,9 +143,9 @@ class FaceScannerController extends GetxController {
             if (leftEyeOpen < 0.3 && rightEyeOpen < 0.3) {
               hasBlinked.value = true;
               instructionText.value = "Memproses Vektor Wajah...";
-              
+
               await cameraController!.stopImageStream();
-              
+
               // Mulai proses ekstraksi AI sungguhan
               await extractAndSaveVector(image, face);
             }
@@ -160,7 +171,7 @@ class FaceScannerController extends GetxController {
     try {
       // 1. Konversi format raw kamera ke format gambar standar yang bisa dimanipulasi
       img.Image convertedImage = _convertYUV420ToImage(cameraImage);
-      
+
       // Rotate gambar sesuai orientasi sensor (kamera depan biasanya perlu diputar 270 derajat)
       convertedImage = img.copyRotate(convertedImage, angle: 270);
 
@@ -175,20 +186,35 @@ class FaceScannerController extends GetxController {
       );
 
       // 3. Resize ke 112x112 untuk MobileFaceNet
-      img.Image resizedFace = img.copyResize(croppedFace, width: 112, height: 112);
+      img.Image resizedFace = img.copyResize(
+        croppedFace,
+        width: 112,
+        height: 112,
+      );
 
       // 4. Ubah gambar ke format array input [1, 112, 112, 3] Float32
       List input = imageToByteListFloat32(resizedFace, 112, 127.5, 127.5);
-      
+
       // Siapkan array kosong untuk menampung hasil dari AI (128 angka)
-      List output = List.filled(1 * 192, 0).reshape([1, 192]); // Catatan: MobileFaceNet tertentu outputnya 192, jika error ubah ke 128.
+      List output = List.filled(1 * 192, 0).reshape(
+        [1, 192],
+      ); // Catatan: MobileFaceNet tertentu outputnya 192, jika error ubah ke 128.
 
       // 5. JALANKAN AI SUNGGUHAN
       interpreter!.run(input, output);
 
       // 6. Tangkap hasil Vektor
-      List<double> faceVector = (output[0] as List).cast<double>();
-      print("BERHASIL EKSTRAK VEKTOR! Contoh Angka: ${faceVector.sublist(0, 5)}...");
+      List<double> vektorWajahAsli = output[0];
+
+      // NORMALISASI
+      vektorWajahAsli = _normalizeEmbedding(vektorWajahAsli);
+
+      print("================================");
+      print("NORMALIZED VECTOR LENGTH : ${vektorWajahAsli.length}");
+      print("3 ANGKA PERTAMA : ${vektorWajahAsli.sublist(0, 3)}");
+      print("================================");
+      print("REGISTER VECTOR");
+      print(vektorWajahAsli.sublist(0, 10));
 
       // 7. Simpan Vektor ke Supabase (Pastikan kamu punya tabel users/profiles dengan kolom tipe vector)
       /* // KODE SUPABASE NANTI (Di-comment dulu agar tidak error jika kolom belum dibuat)
@@ -208,21 +234,24 @@ class FaceScannerController extends GetxController {
       );
 
       Get.offAllNamed('/ticket', arguments: eventData);
-
     } catch (e) {
       print("Gagal Ekstraksi Vektor: $e");
-      Get.snackbar('Error', 'Gagal memproses wajah. Coba lagi.', backgroundColor: Colors.red.withOpacity(0.1));
-      
+      Get.snackbar(
+        'Error',
+        'Gagal memproses wajah. Coba lagi.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+      );
+
       // Ulangi deteksi jika gagal
       hasBlinked.value = false;
-      initCamera(); 
+      initCamera();
     }
   }
 
   // =========================================
   // FUNGSI HELPER (MANIPULASI GAMBAR)
   // =========================================
-  
+
   // Mengubah data mentah YUV kamera menjadi objek Gambar (Image)
   img.Image _convertYUV420ToImage(CameraImage image) {
     final width = image.width;
@@ -242,7 +271,8 @@ class FaceScannerController extends GetxController {
         final int vValue = image.planes[2].bytes[uvOffset];
 
         int r = (yValue + 1.402 * (vValue - 128)).toInt();
-        int g = (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128)).toInt();
+        int g = (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128))
+            .toInt();
         int b = (yValue + 1.772 * (uValue - 128)).toInt();
 
         // Batasi nilai warna 0-255
@@ -258,7 +288,12 @@ class FaceScannerController extends GetxController {
   }
 
   // Menormalisasi warna gambar (0-255) menjadi angka desimal (untuk input TFLite)
-  Float32List imageToByteListFloat32(img.Image image, int inputSize, double mean, double std) {
+  Float32List imageToByteListFloat32(
+    img.Image image,
+    int inputSize,
+    double mean,
+    double std,
+  ) {
     var convertedBytes = Float32List(1 * inputSize * inputSize * 3);
     var buffer = Float32List.view(convertedBytes.buffer);
     int pixelIndex = 0;
@@ -272,6 +307,20 @@ class FaceScannerController extends GetxController {
       }
     }
     return convertedBytes.buffer.asFloat32List();
+  }
+
+  List<double> _normalizeEmbedding(List<double> embedding) {
+    double norm = 0.0;
+
+    for (double value in embedding) {
+      norm += value * value;
+    }
+
+    norm = sqrt(norm);
+
+    if (norm == 0) return embedding;
+
+    return embedding.map((e) => e / norm).toList();
   }
 
   @override

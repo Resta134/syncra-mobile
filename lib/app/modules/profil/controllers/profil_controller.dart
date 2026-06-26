@@ -94,21 +94,35 @@ class ProfilController extends GetxController {
   }
 
   // ================= --- TAMBAHAN BARU: FUNGSI TOMBOL VERIFIKASI WAJAH --- =================
+ // ================= --- FUNGSI TOMBOL VERIFIKASI WAJAH --- =================
   void handleFaceVerification() {
     if (isFaceVerified.value) {
-      // Jika sudah diverifikasi, kasih alert sukses
-      Get.snackbar(
-        'Sudah Terverifikasi', 
-        'Wajah Anda sudah terdaftar di sistem. Anda siap untuk check-in event!',
-        backgroundColor: Colors.green.withOpacity(0.1),
-        colorText: Colors.green,
+      // Jika sudah diverifikasi, munculkan pop-up opsi
+      Get.defaultDialog(
+        title: "Sudah Terverifikasi",
+        middleText: "Wajah Anda sudah terdaftar di sistem dan siap digunakan untuk Check-in Event.\n\nApakah Anda ingin memperbarui (scan ulang) data wajah Anda?",
+        titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+        buttonColor: const Color(0xFF00dbe7),
+        textConfirm: "Scan Ulang",
+        confirmTextColor: Colors.black,
+        textCancel: "Tutup",
+        onConfirm: () {
+          Get.back(); // Tutup dialog dulu
+          // Arahkan ke kamera, dan saat KEMBALI dari kamera, jalankan fetchProfile()
+          Get.toNamed('/scan-page', arguments: {'from_profile': true})?.then((_) {
+            fetchProfileFromSupabase(); // REFRESH DATA!
+          });
+        },
       );
     } else {
-      // Jika belum, lempar ke halaman Face Scanner
-      Get.toNamed('/facescanner', arguments: {'from_profile': true});
+      // Jika belum verifikasi, langsung lempar ke halaman Face Scanner
+      // .then() memastikan saat user klik "Lanjutkan" di halaman scan dan kembali ke profil,
+      // profil akan otomatis me-refresh database untuk ngecek vektor barunya.
+      Get.toNamed('/scan-page', arguments: {'from_profile': true})?.then((_) {
+        fetchProfileFromSupabase(); // REFRESH DATA!
+      });
     }
   }
-
   // ================= 2. UPDATE: SIMPAN DATA PROFIL KE SERVER =================
   Future<void> updateProfileInSupabase(String newName, String newPhone) async {
     try {
