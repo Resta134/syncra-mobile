@@ -10,6 +10,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart'
     as img; // Alias untuk membedakan dengan Image Flutter
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tranlator_v1/app/modules/gatekeeper/face_vertivication/helpers/image_helper.dart';
 
 class FaceScannerController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -85,6 +86,8 @@ class FaceScannerController extends GetxController {
     try {
       interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite');
       print("TFLite Model Berhasil Dimuat!");
+      print(interpreter!.getInputTensor(0).shape);
+      print(interpreter!.getOutputTensor(0).shape);
     } catch (e) {
       print("Gagal memuat TFLite Model: $e");
     }
@@ -170,11 +173,10 @@ class FaceScannerController extends GetxController {
 
     try {
       // 1. Konversi format raw kamera ke format gambar standar yang bisa dimanipulasi
-      img.Image convertedImage = _convertYUV420ToImage(cameraImage);
+      img.Image? convertedImage = ImageHelper.cameraImageToImage(cameraImage);
 
       // Rotate gambar sesuai orientasi sensor (kamera depan biasanya perlu diputar 270 derajat)
-      convertedImage = img.copyRotate(convertedImage, angle: 270);
-
+      convertedImage = img.copyRotate(convertedImage!, angle: 270);
       // 2. Crop bagian wajah sesuai kotak (BoundingBox) dari ML Kit
       final rect = face.boundingBox;
       img.Image croppedFace = img.copyCrop(
