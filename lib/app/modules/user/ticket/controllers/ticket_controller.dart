@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tranlator_v1/app/utils/audit_log.dart';
 
 class TicketController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;

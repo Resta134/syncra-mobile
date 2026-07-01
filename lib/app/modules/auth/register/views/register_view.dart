@@ -52,7 +52,7 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Daftarkan diri Anda untuk bergabung ke Syncra",
+                  "Daftarkan diri Anda untuk bergabung ke Syncro",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
