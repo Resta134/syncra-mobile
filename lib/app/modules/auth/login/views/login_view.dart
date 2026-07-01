@@ -52,7 +52,7 @@ class LoginView extends GetView<LoginController> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Silakan masuk ke akun Syncra Anda",
+                  "Silakan masuk ke akun Syncro Anda",
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 40),
@@ -196,16 +196,7 @@ class LoginView extends GetView<LoginController> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Ikon G untuk Google
-                        const Text(
-                          "G",
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'serif',
-                          ),
-                        ),
+                        Image.asset('assets/images/googleSymbol.png', height: 24),
                         const SizedBox(width: 12),
                         Text(
                           "Masuk dengan Google",

@@ -12,49 +12,105 @@ class DashboardModView extends GetView<DashboardModController> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 1,
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
         title: Row(
           children: [
             Container(
-              width: 35, height: 35,
-              decoration: const BoxDecoration(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                image: DecorationImage(image: AssetImage("assets/images/image.png"), fit: BoxFit.cover),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blueGrey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                image: const DecorationImage(
+                  image: AssetImage("assets/images/logo_syncro.png"),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            const SizedBox(width: 10),
-            const Text("synCra App", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 12),
+            const Text(
+              "syncro",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF05114D),
+                letterSpacing: -0.5,
+              ),
+            ),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 15.0),
-            child: IconButton(
-              onPressed: () => controller.goToNotifikasi(),
-              icon: const Icon(Icons.notifications_active, color: Color(0xFF0038FF)),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blueGrey.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                onPressed: () => controller.goToNotifikasi(),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1E293B),
+                  size: 22,
+                ),
+              ),
             ),
           ),
         ],
       ),
+
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           // Nav Cards
           Row(
             children: [
-              Expanded(child: _buildNavCard(Icons.monitor, "Transcript", () => controller.goToTranscript())),
+              Expanded(
+                child: _buildNavCard(
+                  Icons.monitor,
+                  "Transcript",
+                  () => controller.goToTranscript(),
+                ),
+              ),
               const SizedBox(width: 15),
-              Expanded(child: _buildNavCard(Icons.forum, "Q&A Queue", () => controller.goToQA())),
+              Expanded(
+                child: _buildNavCard(
+                  Icons.forum,
+                  "Q&A Queue",
+                  () => controller.goToQA(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 30),
-          const Text("Broadcast Center", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            "Broadcast Center",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 15),
           _buildEnhancedBroadcastCard(),
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0, role: 'moderator'),
+      bottomNavigationBar: const CustomBottomNavBar(
+        currentIndex: 0,
+        role: 'moderator',
+      ),
     );
   }
 
@@ -67,7 +123,13 @@ class DashboardModView extends GetView<DashboardModController> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -95,10 +157,16 @@ class DashboardModView extends GetView<DashboardModController> {
           TextField(
             controller: controller.broadcastController,
             maxLines: 3,
-            decoration: const InputDecoration(hintText: "Tulis pesan broadcast...", border: InputBorder.none),
+            decoration: const InputDecoration(
+              hintText: "Tulis pesan broadcast...",
+              border: InputBorder.none,
+            ),
           ),
           const Divider(),
-          const Text("Pilih Template:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+          const Text(
+            "Pilih Template:",
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -116,11 +184,19 @@ class DashboardModView extends GetView<DashboardModController> {
             child: ElevatedButton(
               onPressed: () => controller.sendBroadcast(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0038FF),
+                backgroundColor: const Color.fromARGB(255, 2, 39, 170),
                 padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
               ),
-              child: const Text("Kirim Sekarang", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Kirim Sekarang",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -133,8 +209,18 @@ class DashboardModView extends GetView<DashboardModController> {
       onTap: () => controller.fillBroadcast(label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(10)),
-        child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF0038FF), fontWeight: FontWeight.w500)),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF0038FF),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
   }

@@ -6,7 +6,7 @@ import '../controllers/ticket_controller.dart';
 
 class TicketView extends GetView<TicketController> {
   const TicketView({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +17,7 @@ class TicketView extends GetView<TicketController> {
         backgroundColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          'Tiket Saya', 
+          'Tiket Saya',
           style: TextStyle(
             color: Color(0xFF1E293B),
             fontWeight: FontWeight.bold,
@@ -36,16 +36,25 @@ class TicketView extends GetView<TicketController> {
         }
 
         // 2. Tampilan Jika Belum Punya Tiket Sama Sekali
-        if (controller.upcomingTickets.isEmpty && controller.completedTickets.isEmpty) {
+        if (controller.upcomingTickets.isEmpty &&
+            controller.completedTickets.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.confirmation_number_outlined, size: 80, color: Colors.grey[300]),
+                Icon(
+                  Icons.confirmation_number_outlined,
+                  size: 80,
+                  color: Colors.grey[300],
+                ),
                 const SizedBox(height: 15),
                 Text(
                   "Belum ada tiket",
-                  style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -61,7 +70,10 @@ class TicketView extends GetView<TicketController> {
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 20.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -71,7 +83,11 @@ class TicketView extends GetView<TicketController> {
                 if (controller.upcomingTickets.isNotEmpty) ...[
                   const Text(
                     "Tiket Aktif",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
                   ),
                   const SizedBox(height: 15),
                   ...controller.upcomingTickets.map((ticket) {
@@ -79,6 +95,7 @@ class TicketView extends GetView<TicketController> {
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: _buildTicketCard(
                         context,
+                        eventId: ticket['event_id'],
                         ticketCode: ticket['ticket_code'], // Data dari DB
                         title: ticket['title'],
                         speaker: ticket['speaker'],
@@ -97,7 +114,11 @@ class TicketView extends GetView<TicketController> {
                   const SizedBox(height: 10),
                   const Text(
                     "Riwayat Acara",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
                   ),
                   const SizedBox(height: 15),
                   ...controller.completedTickets.map((ticket) {
@@ -105,6 +126,7 @@ class TicketView extends GetView<TicketController> {
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: _buildTicketCard(
                         context,
+                        eventId: ticket['event_id'],
                         ticketCode: ticket['ticket_code'], // Data dari DB
                         title: ticket['title'],
                         speaker: ticket['speaker'],
@@ -116,8 +138,8 @@ class TicketView extends GetView<TicketController> {
                     );
                   }).toList(),
                 ],
-                
-                const SizedBox(height: 40), 
+
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -125,7 +147,7 @@ class TicketView extends GetView<TicketController> {
       }),
       bottomNavigationBar: const CustomBottomNavBar(
         currentIndex: 1,
-        role: 'user', 
+        role: 'user',
       ),
     );
   }
@@ -136,6 +158,7 @@ class TicketView extends GetView<TicketController> {
   // Menambahkan parameter ticketCode agar popUp QR tidak error
   Widget _buildTicketCard(
     BuildContext context, {
+    required String eventId,
     required String ticketCode,
     required String title,
     required String speaker,
@@ -174,7 +197,9 @@ class TicketView extends GetView<TicketController> {
                     fit: BoxFit.cover,
                     // Error builder jika gambar belum ditambahkan di assets
                     errorBuilder: (context, error, stackTrace) => Container(
-                      height: 140, width: double.infinity, color: Colors.blue[100],
+                      height: 140,
+                      width: double.infinity,
+                      color: Colors.blue[100],
                     ),
                   ),
                   Container(
@@ -195,7 +220,10 @@ class TicketView extends GetView<TicketController> {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: isActive ? Colors.blueAccent : Colors.grey[600],
                         borderRadius: BorderRadius.circular(8),
@@ -264,11 +292,19 @@ class TicketView extends GetView<TicketController> {
                 // Info Speaker
                 Row(
                   children: [
-                    Icon(Icons.person_outline_rounded, size: 18, color: Colors.grey[500]),
+                    Icon(
+                      Icons.person_outline_rounded,
+                      size: 18,
+                      color: Colors.grey[500],
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      speaker, 
-                      style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w600)
+                      speaker,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -277,7 +313,11 @@ class TicketView extends GetView<TicketController> {
                 // Info Jadwal
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey[400]),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
+                      color: Colors.grey[400],
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       date,
@@ -285,7 +325,10 @@ class TicketView extends GetView<TicketController> {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('|', style: TextStyle(color: Colors.grey[300])),
+                      child: Text(
+                        '|',
+                        style: TextStyle(color: Colors.grey[300]),
+                      ),
                     ),
                     Text(
                       time.isNotEmpty ? time.substring(0, 5) : '00:00',
@@ -293,7 +336,7 @@ class TicketView extends GetView<TicketController> {
                     ),
                   ],
                 ),
-                
+
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 15.0),
                   child: Divider(height: 1, thickness: 1),
@@ -306,15 +349,25 @@ class TicketView extends GetView<TicketController> {
                     height: 50,
                     child: ElevatedButton.icon(
                       onPressed: () => controller.goToLive(),
-                      icon: const Icon(Icons.live_tv_rounded, color: Colors.white, size: 20),
+                      icon: const Icon(
+                        Icons.live_tv_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       label: const Text(
                         'Gabung Ruang Live',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blueAccent,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                       ),
                     ),
                   )
@@ -324,15 +377,25 @@ class TicketView extends GetView<TicketController> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => print("Open Materials"),
-                          icon: Icon(Icons.menu_book_rounded, size: 18, color: Colors.blue[700]),
+                          icon: Icon(
+                            Icons.menu_book_rounded,
+                            size: 18,
+                            color: Colors.blue[700],
+                          ),
                           label: Text(
                             "Materi",
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue[700]),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
+                            ),
                           ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             side: BorderSide(color: Colors.blue.shade200),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
@@ -340,16 +403,26 @@ class TicketView extends GetView<TicketController> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => print("Download Summary"),
-                          icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: Colors.white),
+                          icon: const Icon(
+                            Icons.picture_as_pdf_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                           label: const Text(
                             "Ringkasan",
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange[600],
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
@@ -361,15 +434,25 @@ class TicketView extends GetView<TicketController> {
                     height: 50,
                     child: ElevatedButton.icon(
                       onPressed: null,
-                      icon: Icon(Icons.check_circle_rounded, color: Colors.grey[400], size: 20),
+                      icon: Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
                       label: Text(
                         'Acara Telah Berakhir',
-                        style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey[200],
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                       ),
                     ),
                   ),

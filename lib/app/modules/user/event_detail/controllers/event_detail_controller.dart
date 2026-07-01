@@ -111,7 +111,7 @@ class EventDetailController extends GetxController {
   // ==========================================
   void goToLive() {
     if (hasTicket.value) {
-      Get.toNamed('/live-room', arguments: eventData);
+      Get.toNamed('/live', arguments: eventData);
     } else {
       lockticket();
     }

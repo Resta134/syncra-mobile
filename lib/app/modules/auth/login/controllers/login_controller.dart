@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tranlator_v1/app/utils/audit_log.dart';
 
 class LoginController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -24,7 +25,7 @@ class LoginController extends GetxController {
     // 1. Validasi form kosong
     if (email.isEmpty || password.isEmpty) {
       Get.snackbar(
-        "Gagal Masuk", 
+        "Gagal Masuk",
         "Email dan Password tidak boleh kosong!",
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
@@ -53,8 +54,13 @@ class LoginController extends GetxController {
         // Jika package_tier kosong, anggap sebagai 'Peserta' atau 'Free'
         String userRole = userData?['package_tier'] ?? 'Peserta';
 
+        await AuditLog.record(
+          'USER_LOGIN_SUCCESS',
+          'Pengguna ($email) berhasil masuk ke sistem dengan akses sebagai: $userRole.',
+        );
+
         Get.snackbar(
-          "Berhasil Masuk", 
+          "Berhasil Masuk",
           "Selamat datang, akses sebagai $userRole diberikan.",
           backgroundColor: Colors.green.withOpacity(0.1),
           colorText: Colors.green,
@@ -71,7 +77,7 @@ class LoginController extends GetxController {
 
         if (roleLower == 'speaker') {
           // Arahkan pemateri ke Dashboard Speaker
-          Get.offAllNamed('/dashboard-speak'); 
+          Get.offAllNamed('/dashboard-speak');
         } else if (roleLower == 'moderator') {
           // Arahkan moderator ke Dashboard Moderator
           Get.offAllNamed('/dashboard-mod');
@@ -85,14 +91,14 @@ class LoginController extends GetxController {
       }
     } on AuthException catch (e) {
       Get.snackbar(
-        "Otentikasi Gagal", 
+        "Otentikasi Gagal",
         "Email atau password salah.",
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
       );
     } catch (e) {
       Get.snackbar(
-        "Terjadi Kesalahan", 
+        "Terjadi Kesalahan",
         e.toString(),
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,

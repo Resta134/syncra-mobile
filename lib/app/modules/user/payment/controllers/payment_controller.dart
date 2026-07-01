@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
+import 'package:tranlator_v1/app/utils/audit_log.dart'; 
 
 class PaymentController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -20,7 +21,7 @@ class PaymentController extends GetxController {
     }
   }
 
-  // Memformat harga dari database ke Rupiah (Menggantikan countPayment dummy)
+  // Memformat harga dari database ke Rupiah
   String get eventPrice {
     final price = eventData['price'];
     if (price == null || price == 0 || price.toString() == '0') {
@@ -57,7 +58,7 @@ class PaymentController extends GetxController {
       return;
     }
 
-    // 2. Tampilkan Dialog Sukses (Kode custom milikmu)
+    // 2. Tampilkan Dialog Sukses
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
@@ -75,7 +76,7 @@ class PaymentController extends GetxController {
               ),
               const SizedBox(height: 16),
               const Text(
-                "Pembayaran Berhasil!", // Di-Indonesiakan agar selaras
+                "Pembayaran Berhasil!", 
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -102,24 +103,36 @@ class PaymentController extends GetxController {
           ),
         ),
       ),
-      barrierDismissible: false, // User tidak bisa menutup dialog secara manual
+      barrierDismissible: false, 
     );
 
     try {
-      // 3. Simpan data tiket ke database Supabase secara *background*
+      // 3. Simpan data tiket ke database Supabase secara background
       final userId = _supabase.auth.currentUser?.id;
       final eventId = eventData['id'];
+      final eventTitle = eventData['title'] ?? 'Unknown Event';
 
       if (userId != null && eventId != null) {
         final newTicketCode = "SYNCRA-${Random().nextInt(9000) + 1000}";
+        
+        // Eksekusi insert tiket ke database
         await _supabase.from('tickets').insert({
           'user_id': userId,
           'event_id': eventId,
           'ticket_code': newTicketCode,
         });
+
+        // ====================================================================
+        // 🔴 TANAM LOG DI SINI (Catat Detail Event, Kode Tiket, & Metode Pembayaran)
+        // ====================================================================
+        final metodeDipakai = selectedMethod.value.isEmpty ? "Gratis/Free Tier" : selectedMethod.value;
+        await AuditLog.record(
+          'TICKET_PURCHASE_SUCCESS', 
+          'Pengguna berhasil memperoleh tiket untuk Event: "$eventTitle" (ID: $eventId). Kode Tiket: $newTicketCode. Metode Pembayaran: $metodeDipakai.'
+        );
       }
 
-      // 4. Tunggu minimal 2 detik (Sesuai kodemu agar UX loading-nya terlihat natural)
+      // 4. Tunggu minimal 2 detik agar UX loading terlihat natural
       await Future.delayed(const Duration(seconds: 2));
 
       // 5. Tutup dialog dan lempar ke halaman Face Registration
@@ -127,15 +140,22 @@ class PaymentController extends GetxController {
         Get.back(); 
       }
       
-      // Pakai Get.offNamed agar tidak bisa di-back ke halaman pembayaran lagi
-      // Kita juga bawa eventData (arguments) siapa tau di Face Registration butuh ID Event-nya
       Get.offNamed('/faceregistration', arguments: eventData); 
 
     } catch (e) {
-      // Jika error database (misal mati lampu), tutup dialog dan beritahu user
+      // Jika terjadi error sistem atau jaringan terputus
       if (Get.isDialogOpen == true) {
         Get.back();
       }
+      
+      // ====================================================================
+      // 🔴 OPTIONAL: Catat juga kegagalan transaksi ke dalam log audit
+      // ====================================================================
+      await AuditLog.record(
+        'TICKET_PURCHASE_FAILED', 
+        'Gagal memproses pembelian tiket untuk Event ID: ${eventData['id']}. Error: ${e.toString()}'
+      );
+
       Get.snackbar('Gagal Memproses', e.toString(), backgroundColor: Colors.red.withOpacity(0.1));
     }
   }
