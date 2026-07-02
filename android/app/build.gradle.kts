@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.tranlator_v1"
-    compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

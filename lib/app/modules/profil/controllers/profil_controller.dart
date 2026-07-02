@@ -61,15 +61,38 @@ class ProfilController extends GetxController {
     }
   }
 
-  // ================= 2. UPLOAD FOTO PROFIL =================
-  Future<void> pickAndUploadImage() async {
-    Get.back(); 
-    
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
-
-    if (image == null) return;
-
+  // ================= --- TAMBAHAN BARU: FUNGSI TOMBOL VERIFIKASI WAJAH --- =================
+ // ================= --- FUNGSI TOMBOL VERIFIKASI WAJAH --- =================
+  void handleFaceVerification() {
+    if (isFaceVerified.value) {
+      // Jika sudah diverifikasi, munculkan pop-up opsi
+      Get.defaultDialog(
+        title: "Sudah Terverifikasi",
+        middleText: "Wajah Anda sudah terdaftar di sistem dan siap digunakan untuk Check-in Event.\n\nApakah Anda ingin memperbarui (scan ulang) data wajah Anda?",
+        titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+        buttonColor: const Color(0xFF00dbe7),
+        textConfirm: "Scan Ulang",
+        confirmTextColor: Colors.black,
+        textCancel: "Tutup",
+        onConfirm: () {
+          Get.back(); // Tutup dialog dulu
+          // Arahkan ke kamera, dan saat KEMBALI dari kamera, jalankan fetchProfile()
+          Get.toNamed('/scan-page', arguments: {'from_profile': true})?.then((_) {
+            fetchProfileFromSupabase(); // REFRESH DATA!
+          });
+        },
+      );
+    } else {
+      // Jika belum verifikasi, langsung lempar ke halaman Face Scanner
+      // .then() memastikan saat user klik "Lanjutkan" di halaman scan dan kembali ke profil,
+      // profil akan otomatis me-refresh database untuk ngecek vektor barunya.
+      Get.toNamed('/scan-page', arguments: {'from_profile': true})?.then((_) {
+        fetchProfileFromSupabase(); // REFRESH DATA!
+      });
+    }
+  }
+  // ================= 2. UPDATE: SIMPAN DATA PROFIL KE SERVER =================
+  Future<void> updateProfileInSupabase(String newName, String newPhone) async {
     try {
       isLoading.value = true;
       Get.snackbar("Loading", "Sedang mengunggah foto...", showProgressIndicator: true);

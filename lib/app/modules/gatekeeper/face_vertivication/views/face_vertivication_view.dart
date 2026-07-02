@@ -1,172 +1,188 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:camera/camera.dart';
+import 'package:tranlator_v1/app/modules/user/scan_page/views/scanner_overlay.dart';
 
 import '../controllers/face_vertivication_controller.dart';
 
 class FaceVertivicationView extends GetView<FaceVertivicationController> {
- const FaceVertivicationView({super.key});
+  const FaceVertivicationView({super.key});
   @override
   Widget build(BuildContext context) {
-   return Scaffold(
-      // Background disamakan dengan warna gelap pada mockup aslinya
-      backgroundColor: Color(0xFF383B46),
+    return Scaffold(
+      backgroundColor: const Color(
+        0xFF051424,
+      ), // Background gelap dari desain Informatics Precision
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Get.back(),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF89CEFF)),
+          onPressed: () => controller.dashboard(),
         ),
-        title: Text(
-          'Identity Verification',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        title: const Text(
+          'Gatekeeper Verification',
+          style: TextStyle(
+            color: Color(0xFF89CEFF),
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.help_outline_rounded, color: Colors.blue),
+            icon: const Icon(
+              Icons.help_outline_rounded,
+              color: Color(0xFF89CEFF),
+            ),
             onPressed: () {
-              Get.snackbar('Bantuan', 'Posisikan wajah tepat di dalam lingkaran.');
+              Get.snackbar(
+                'Bantuan',
+                'Posisikan wajah pengunjung di dalam kotak scanner.',
+                backgroundColor: const Color(0xFF010f1f).withOpacity(0.8),
+                colorText: Colors.white,
+              );
             },
-          )
+          ),
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: 
-          Column(
-            children: [
-              SizedBox(height: 10),
-              // TEKS INSTRUKSI ATAS
-              Text(
-                'Please position your face clearly within\nthe frame below to complete\nverification.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white70,
-                  height: 1.4,
-                ),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            // TEKS INSTRUKSI ATAS
+            const Text(
+              'Please position the face clearly within\nthe frame below to complete\nattendance check-in.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFFbec8d2), // on-surface-variant
+                height: 1.4,
               ),
-              
-              Spacer(),
+            ),
 
-              // AREA BULATAN SCAN MUKA (POLOS + GARIS SCAN)
-              Stack(
+            const Spacer(),
+
+            // AREA SCAN MUKA REAL-TIME DENGAN OVERLAY SIKU-SIKU
+            // Di dalam body, pada bagian Stack CameraPreview:
+            // AREA SCAN MUKA REAL-TIME DENGAN OVERLAY SIKU-SIKU
+            // Ganti bagian Stack CameraPreview di FaceVertivicationView dengan ini:
+            SizedBox(
+              width: 320,
+              height: 320,
+              child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Aksen siku-siku frame (Opsional, dibikin simpel dengan container bulat)
-                  Container(
-                    width: 280,
-                    height: 280,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey.shade600, // Warna bg muka polos sementara
-                      border: Border.all(
-                        color: Colors.blue.shade700, 
-                        width: 4.0, // Ketebalan border biru luar
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '[ Camera Feed ]',
-                        style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      10,
+                    ), // Lingkaran sempurna
+                    child: Obx(() {
+                      if (!controller.isCameraInitialized.value) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF89CEFF),
+                          ),
+                        );
+                      }
+                      return FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: controller
+                              .cameraController
+                              .value
+                              .previewSize!
+                              .height,
+                          height: controller
+                              .cameraController
+                              .value
+                              .previewSize!
+                              .width,
+                          child: CameraPreview(controller.cameraController),
+                        ),
+                      );
+                    }),
                   ),
-                  // Garis laser scan biru di tengah
-                  Container(
-                    width: 280,
-                    height: 3,
-                    color: Colors.blue.shade400,
-                  ),
+                  const ScannerOverlay(width: 320, height: 320),
                 ],
               ),
+            ),
+            const Spacer(),
 
-              Spacer(),
+            // AREA TOMBOL BAWAH
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: [
+                  // 1. Status Info (Biru Cyan)
+                  const SizedBox(height: 16),
 
-              // AREA TOMBOL BAWAH
-              // 1. Tombol Align Face (Biru)
-              SizedBox(
-                width: double.infinity, // Ambil lebar penuh
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Panggil fungsi scan wajah di controller
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                  // 2. Tombol Manual QR Scan (Putih/Ghost Style)
+                  // Ganti bagian Column tombol bawah dengan ini:
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      children: [
+                        // Indikator Status (Tetap informatif)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF010f1f),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            '🔄 Scanning face...',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF89CEFF),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Tombol Utama (Manual QR Scan)
+                        ElevatedButton.icon(
+                          onPressed: () => controller.qr(),
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
+                          label: const Text('Manual QR Scan'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: const Color(0xFF89CEFF),
+                            foregroundColor: const Color(0xFF010f1f),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    elevation: 0,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.face_retouching_natural, color: Colors.white, size: 20),
-                      SizedBox(width: 10),
-                      Text(
-                        'Align face within the circle',
-                        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-              // 2. Tombol Manual QR Scan (Putih)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                   controller.qr();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                  // TEKS LAPORAN ISSUE BAWAH
+                  InkWell(
+                    onTap: () {
+                      // controller.report();
+                    },
+                    child: const Text(
+                      'Report Verification Issue',
+                      style: TextStyle(
+                        color: Color(0xFF88929b), // outline color
+                        fontSize: 13,
+                        decoration: TextDecoration.underline,
+                      ),
                     ),
-                    elevation: 0,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.qr_code_scanner_rounded, color: Colors.blue.shade700, size: 20),
-                      SizedBox(width: 10),
-                      Text(
-                        'Manual QR Scan',
-                        style: TextStyle(color: Colors.blue.shade700, fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
+                  const SizedBox(height: 10),
+                ],
               ),
-
-              SizedBox(height: 24),
-
-              // TEKS LAPORAN ISSUE BAWAH
-              InkWell(
-                onTap: () {
-                  controller.report();
-                },
-                child: Text(
-                  'Report Verification Issue',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
-}}
+  }
+}
