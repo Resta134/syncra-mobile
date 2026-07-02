@@ -141,7 +141,17 @@ class DashboardView extends GetView<DashboardController> {
                       const SizedBox(width: 20),
                   itemBuilder: (context, index) {
                     final data = controller.liveStreamData[index];
-                    return _buildLiveCard(data);
+                    return GestureDetector(
+                      // Tambahkan baris ini agar seluruh area card sensitif terhadap klik!
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        // Tambahkan print ini untuk memastikan kliknya masuk
+                        print("Card Event di-klik! Data: $data");
+
+                        controller.goToEventDetail(data);
+                      },
+                      child: _buildLiveCard(data),
+                    );
                   },
                 );
               }),
@@ -235,7 +245,7 @@ class DashboardView extends GetView<DashboardController> {
     final imageUrl = data['image_url'];
 
     return InkWell(
-      onTap: () => controller.goToLive(),
+      onTap: () => controller.goToEventDetail(data),
       borderRadius: BorderRadius.circular(25),
       child: Container(
         width: 260,

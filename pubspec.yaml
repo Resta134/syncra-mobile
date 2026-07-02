@@ -31,7 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   material_design_icons_flutter: ^7.0.0
-  supabase_flutter: ^2.0.0 # Atau versi terbaru
+  supabase_flutter: ^2.0.0 # Atau versi terbaru   
   flutter_secure_storage: ^9.0.0 # Untuk enkripsi token lokal
 
   # The following adds the Cupertino Icons font to your application.
@@ -45,6 +45,11 @@ dependencies:
   image: ^4.8.0
   google_sign_in: ^6.2.1
   mobile_scanner: ^6.0.0
+  speech_to_text: ^7.0.0
+  translator: ^1.0.3
+  permission_handler: ^12.0.0
+  image_picker: ^1.2.2
+
 
 dev_dependencies:
   flutter_test:
