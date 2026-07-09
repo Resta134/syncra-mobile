@@ -47,7 +47,7 @@ class QASpeakView extends GetView<QASpeakController> {
                   return _buildQuestionCard(
                     id: item['id'],
                     name: item['name'],
-                    avatarUrl: item['avatar'],
+                    // avatarUrl: item['avatar'],
                     question: item['question'],
                     isLive: item['isLive'],
                     status: item['status'] ?? 'pending',
@@ -83,8 +83,12 @@ class QASpeakView extends GetView<QASpeakController> {
   }
 
   Widget _buildQuestionCard({
-    required int id, required String name, required String avatarUrl, 
-    required String question, required bool isLive, required String status,
+    required String id, 
+    required String name, 
+    // required String avatarUrl, 
+    required String question, 
+    required bool isLive, 
+    required String status,
   }) {
     bool isAnswered = status == 'answered';
     bool isSkipped = status == 'skipped';
@@ -103,15 +107,15 @@ class QASpeakView extends GetView<QASpeakController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(radius: 16, backgroundImage: NetworkImage(avatarUrl)),
-                  const SizedBox(width: 10),
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const Spacer(),
-                  if (isAnswered) const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                ],
-              ),
+              // Row(
+              //   children: [
+              //     CircleAvatar(radius: 16, backgroundImage: NetworkImage(avatarUrl)),
+              //     const SizedBox(width: 10),
+              //     Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              //     const Spacer(),
+              //     if (isAnswered) const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              //   ],
+              // ),
               const SizedBox(height: 12),
               Text(question, style: TextStyle(
                 fontSize: 15, height: 1.4,

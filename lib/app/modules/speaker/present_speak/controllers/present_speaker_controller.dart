@@ -80,40 +80,78 @@ class SpeakerController extends GetxController {
   // ======================================================
   // MIC CONTROL
   // ======================================================
-
   Future<void> toggleMic() async {
-    if (isMicOn.value) {
-      await _stopListening();
-    } else {
-      await _startListening();
-    }
+    isMicOn.toggle(); // Ubah status UI duluan
 
-    isMicOn.toggle();
+    if (isMicOn.value) {
+      _startTimer(); // Mulai timer HANYA saat tombol ditekan user
+      await _startListening();
+    } else {
+      await _stopListening();
+    }
   }
 
   // ======================================================
   // START STT
   // ======================================================
-
   Future<void> _startListening() async {
-    bool available = await speech.initialize();
+    bool available = await speech.initialize(
+      onStatus: (status) async {
+        // <-- Ubah jadi async
+        print("STT Status: $status");
+
+        if (status == 'done' || status == 'notListening') {
+          // 🔥 TRIK RAMPAS PAKSA:
+          // Jika mic mati karena hening tapi masih ada teks yang tertinggal di papan (belum masuk list)
+          if (liveText.value.trim().isNotEmpty) {
+            final kalimatTerakhir = liveText.value.trim();
+            liveText.value = ''; // Langsung bersihkan papan agar tidak double
+            await _processTranscript(
+              kalimatTerakhir,
+            ); // Eksekusi masuk list & database
+          }
+
+          // Logika Auto-Restart
+          if (isMicOn.value) {
+            print("Keheningan terdeteksi. Auto-Restarting Mic...");
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (isMicOn.value) _listenActively();
+            });
+          }
+        }
+      },
+      onError: (error) => print("STT Error: $error"),
+    );
 
     if (!available) {
       Get.snackbar("Error", "Speech Recognition tidak tersedia");
+      isMicOn.value = false;
       return;
     }
 
-    _startTimer();
+    _listenActively();
+  }
+
+  // Fungsi khusus untuk mengeksekusi pendengaran dengan logika potong kalimat saat hening
+  // Fungsi khusus pendengaran
+  void _listenActively() async {
+    if (!isMicOn.value) return;
 
     await speech.listen(
       localeId: "id_ID",
       listenMode: ListenMode.dictation,
       partialResults: true,
+      pauseFor: const Duration(seconds: 3), // Batas hening 3 detik
+      listenFor: const Duration(hours: 24),
       onResult: (result) async {
+        // 1. Selalu tampilkan hasil tangkapan di papan secara real-time
         liveText.value = result.recognizedWords;
 
+        // 2. JAGA-JAGA: Jika sistem HP-mu (kebetulan) mengirimkan sinyal final dengan benar
         if (result.finalResult && result.recognizedWords.trim().isNotEmpty) {
-          await _processTranscript(result.recognizedWords.trim());
+          final kalimatSelesai = result.recognizedWords.trim();
+          liveText.value = ''; // Bersihkan papan
+          await _processTranscript(kalimatSelesai); // Masuk list & database
         }
       },
     );
@@ -122,51 +160,60 @@ class SpeakerController extends GetxController {
   // ======================================================
   // STOP STT
   // ======================================================
-
   Future<void> _stopListening() async {
     await speech.stop();
-
     _timer?.cancel();
   }
 
   // ======================================================
-  // TRANSLATION
+  // TRANSLATION (TRIK BANDING GANDA)
   // ======================================================
 
   Future<void> _processTranscript(String originalText) async {
     try {
-      bool isIndonesian = RegExp(
-        r'\b(yang|dan|di|ke|untuk|dengan|saya|kami|anda|ini|itu|adalah)\b',
-        caseSensitive: false,
-      ).hasMatch(originalText);
+      // 1. Langsung translate ke dua bahasa sekaligus tanpa pusing mikirin 'detectedLang'
+      var toEnglish = await translator.translate(originalText, to: 'en');
+      var toIndo = await translator.translate(originalText, to: 'id');
 
-      String sourceLanguage = isIndonesian ? "id" : "en";
+      String finalTranslatedText = '';
+      String finalSourceLang = '';
 
-      String targetLanguage = isIndonesian ? "en" : "id";
+      // Bersihkan teks dari spasi berlebih dan ubah ke huruf kecil untuk perbandingan yang akurat
+      String textAsli = originalText.toLowerCase().trim();
+      String textInggris = toEnglish.text.toLowerCase().trim();
 
-      final translation = await translator.translate(
-        originalText,
-        from: sourceLanguage,
-        to: targetLanguage,
-      );
+      // 2. LOGIKA KUNCI: Cek kemiripan teks
+      if (textAsli == textInggris) {
+        // Jika teks asli SAMA dengan hasil translate Inggris, berarti aslinya adalah Inggris!
+        finalTranslatedText = toIndo.text; // Tampilkan hasil Indonesia
+        finalSourceLang = 'en';
+        print(
+          "🔀 DETEKSI: Bahasa Inggris -> Diterjemahkan ke Indonesia: $finalTranslatedText",
+        );
+      } else {
+        // Jika berbeda, berarti aslinya bukan Inggris (Indonesia)
+        finalTranslatedText = toEnglish.text; // Tampilkan hasil Inggris
+        finalSourceLang = 'id';
+        print(
+          "🔀 DETEKSI: Bahasa Indonesia -> Diterjemahkan ke Inggris: $finalTranslatedText",
+        );
+      }
 
-      final translatedText = translation.text;
-
+      // 3. Masukkan ke List Papan Berjalan di UI
       transcriptList.insert(0, {
         'original_text': originalText,
-        'translated_text': translatedText,
-        'language': sourceLanguage,
+        'translated_text': finalTranslatedText,
+        'language': finalSourceLang,
       });
 
+      // 4. Kirim dan Simpan ke Database
       await _saveTranscript(
         originalText: originalText,
-        translatedText: translatedText,
-        language: sourceLanguage,
+        translatedText: finalTranslatedText,
+        language: finalSourceLang,
       );
     } catch (e) {
-      print("TRANSLATION ERROR");
-      print(e);
-
+      print("TRANSLATION ERROR: $e");
       Get.snackbar("Translation Error", e.toString());
     }
   }

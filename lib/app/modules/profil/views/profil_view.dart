@@ -151,20 +151,16 @@ class ProfilView extends GetView<ProfilController> {
                   const SizedBox(height: 35),
 
                   // ==========================================
-                  // 2. KARTU PERSONAL INFORMATION
+                  // 2. KARTU PERSONAL INFORMATION (Melayang Lembut)
                   // ==========================================
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'personal_info'.tr,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
+                        const Text(
+                          'Personal Information',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                         ),
                         const SizedBox(height: 10),
                         Container(
@@ -180,45 +176,28 @@ class ProfilView extends GetView<ProfilController> {
                               ),
                             ],
                           ),
-                          child: Obx(
-                            () => Column(
-                              children: [
-                                _buildInfoTile(
-                                  icon: Icons.person_outline,
-                                  title: 'full_name'.tr,
-                                  valueText: controller.userprofil.isNotEmpty
-                                      ? controller.userprofil[0]['name'] ?? '-'
-                                      : 'Loading...',
-                                ),
-                                Divider(
-                                  height: 1,
-                                  color: Colors.grey[100],
-                                  indent: 20,
-                                  endIndent: 20,
-                                ),
-                                _buildInfoTile(
-                                  icon: Icons.email_outlined,
-                                  title: "Email",
-                                  valueText: controller.userprofil.isNotEmpty
-                                      ? controller.userprofil[0]['email'] ?? '-'
-                                      : 'Loading...',
-                                ),
-                                Divider(
-                                  height: 1,
-                                  color: Colors.grey[100],
-                                  indent: 20,
-                                  endIndent: 20,
-                                ),
-                                _buildInfoTile(
-                                  icon: Icons.phone_outlined,
-                                  title: 'phone'.tr,
-                                  valueText: controller.userprofil.isNotEmpty
-                                      ? controller.userprofil[0]['phone'] ?? '-'
-                                      : '-',
-                                ),
-                              ],
-                            ),
-                          ),
+                          // BUNGKUS COLUMN INI DENGAN SATU OBX SAJA
+                          child: Obx(() => Column(
+                            children: [
+                              _buildInfoTile(
+                                icon: Icons.person_outline,
+                                title: "Nama Lengkap",
+                                valueText: controller.userprofil.isNotEmpty ? controller.userprofil[0]['name'] ?? '-' : 'Loading...',
+                              ),
+                              Divider(height: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                              _buildInfoTile(
+                                icon: Icons.email_outlined,
+                                title: "Email",
+                                valueText: controller.userprofil.isNotEmpty ? controller.userprofil[0]['email'] ?? '-' : 'Loading...',
+                              ),
+                              Divider(height: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                              _buildInfoTile(
+                                icon: Icons.phone_outlined,
+                                title: "No Telepon",
+                                valueText: controller.userprofil.isNotEmpty ? controller.userprofil[0]['phone'] ?? '-' : '-',
+                              ),
+                            ],
+                          )),
                         ),
                       ],
                     ),
@@ -293,7 +272,7 @@ class ProfilView extends GetView<ProfilController> {
                                 icon: Icons.lock_outline_rounded,
                                 title: 'change_password'.tr,
                                 subtitle: "******",
-                                onTap: () {},
+                                onTap: () => controller.ubahPassword(),
                               ),
                               Divider(
                                 height: 1,
@@ -302,6 +281,7 @@ class ProfilView extends GetView<ProfilController> {
                                 endIndent: 20,
                               ),
 
+                              // --- BAGIAN FACE VERIFICATION YANG SUDAH DINAMIS ---
                               Obx(() {
                                 final isVerified =
                                     controller.isFaceVerified.value;
@@ -309,12 +289,13 @@ class ProfilView extends GetView<ProfilController> {
                                   icon: MdiIcons.faceRecognition,
                                   title: "Face Verification",
                                   subtitle: isVerified
-                                      ? 'verified'.tr
-                                      : 'verification_req'.tr,
+                                      ? "Verified (Ready for Event)"
+                                      : "Verification required",
                                   subtitleColor: isVerified
                                       ? Colors.green[600]
                                       : Colors.red[400],
-                                  onTap: () {},
+                                  onTap: () =>
+                                      controller.handleFaceVerification(),
                                 );
                               }),
 

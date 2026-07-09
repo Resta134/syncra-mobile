@@ -1,69 +1,121 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserValidationController extends GetxController {
-  //TODO: Implement UserValidationController
-  var participants = [
-  {'id': 'SYNC-001', 'name': 'Rhiki Sulistiyo', 'status': 'Present'},
-  {'id': 'SYNC-002', 'name': 'Resta Sabrina', 'status': 'Present'},
-  {'id': 'SYNC-003', 'name': 'Budi Santoso', 'status': 'Absent'},
-  {'id': 'SYNC-004', 'name': 'Sarah Jenkins', 'status': 'Present'},
-  {'id': 'SYNC-005', 'name': 'Andi Pratama', 'status': 'Present'},
-  {'id': 'SYNC-006', 'name': 'Clara Wijaya', 'status': 'Present'},
-  {'id': 'SYNC-007', 'name': 'Dimas Saputra', 'status': 'Present'},
-  {'id': 'SYNC-008', 'name': 'Nadia Putri', 'status': 'Present'},
-  {'id': 'SYNC-009', 'name': 'Kevin Hartono', 'status': 'Present'},
-  {'id': 'SYNC-010', 'name': 'Michelle Tan', 'status': 'Absent'},
-  {'id': 'SYNC-011', 'name': 'Farhan Akbar', 'status': 'Present'},
-  {'id': 'SYNC-012', 'name': 'Alicia Gomez', 'status': 'Present'},
-  {'id': 'SYNC-013', 'name': 'Rizky Maulana', 'status': 'Present'},
-  {'id': 'SYNC-014', 'name': 'Stefani Lim', 'status': 'Present'},
-  {'id': 'SYNC-015', 'name': 'Yoga Prasetyo', 'status': 'Absent'},
-  {'id': 'SYNC-016', 'name': 'Cindy Natalia', 'status': 'Present'},
-  {'id': 'SYNC-017', 'name': 'Jonathan Lee', 'status': 'Present'},
-  {'id': 'SYNC-018', 'name': 'Putra Mahendra', 'status': 'Present'},
-  {'id': 'SYNC-019', 'name': 'Felicia Wong', 'status': 'Present'},
-  {'id': 'SYNC-020', 'name': 'Ahmad Fauzi', 'status': 'Present'},
-  {'id': 'SYNC-021', 'name': 'Della Anastasya', 'status': 'Present'},
-  {'id': 'SYNC-022', 'name': 'Reza Hidayat', 'status': 'Absent'},
-  {'id': 'SYNC-023', 'name': 'Vanessa Ong', 'status': 'Present'},
-  {'id': 'SYNC-024', 'name': 'Indra Kurniawan', 'status': 'Present'},
-  {'id': 'SYNC-025', 'name': 'Shania Putri', 'status': 'Present'},
-  {'id': 'SYNC-026', 'name': 'William Chen', 'status': 'Present'},
-  {'id': 'SYNC-027', 'name': 'Tegar Ramadhan', 'status': 'Absent'},
-  {'id': 'SYNC-028', 'name': 'Jessica Albert', 'status': 'Present'},
-  {'id': 'SYNC-029', 'name': 'Rafi Nugraha', 'status': 'Present'},
-  {'id': 'SYNC-030', 'name': 'Melisa Caroline', 'status': 'Present'},
-].obs;
-  // Fitur pencarian lokal
+  final SupabaseClient _supabase = Supabase.instance.client;
+
+  // Variabel untuk fitur Search di UI
   var searchQuery = ''.obs;
 
-  List<Map<String, String>> get filteredParticipants {
-    if (searchQuery.value.isEmpty) return participants;
-    return participants
-        .where(
-          (p) =>
-              p['name']!.toLowerCase().contains(
-                searchQuery.value.toLowerCase(),
-              ) ||
-              p['id']!.toLowerCase().contains(searchQuery.value.toLowerCase()),
-        )
-        .toList();
+  // Penampung data gabungan (Kehadiran + Profil)
+  var participants = <Map<String, dynamic>>[].obs;
+
+  String eventName = '';
+
+  @override
+  void onInit() {
+    super.onInit();
+    
+    // Menangkap argumen nama event dari halaman sebelumnya
+    if (Get.arguments != null) {
+      eventName = Get.arguments['title'] ?? Get.arguments['nama_event'] ?? Get.arguments['name'] ?? '';
+    }
+
+    _listenToAttendanceTable();
   }
 
-  void manualCheckIn(String id) {
-    var index = participants.indexWhere((p) => p['id'] == id);
-    if (index != -1) {
-      var p = participants[index];
-      p['status'] = 'Checked In';
-      participants[index] = p; // Trigger Obx
-      Get.snackbar(
-        'Sukses',
-        '${p['name']} berhasil Check-In manual!',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+  // ==========================================
+  // 1. LOGIKA SEARCH BAR (OTOMATIS FILTER)
+  // ==========================================
+  List<Map<String, dynamic>> get filteredParticipants {
+    if (searchQuery.value.isEmpty) {
+      return participants; 
+    }
+    
+    return participants.where((person) {
+      final name = person['name'].toString().toLowerCase();
+      final id = person['id'].toString().toLowerCase();
+      final query = searchQuery.value.toLowerCase();
+      
+      return name.contains(query) || id.contains(query);
+    }).toList();
+  }
+
+  // ==========================================
+  // 2. STREAM DARI TABEL 'attendance'
+  // ==========================================
+  void _listenToAttendanceTable() {
+    
+    // A. Buat fungsi pemroses data agar bisa dipanggil dengan aman
+    void processData(List<Map<String, dynamic>> data) async {
+      if (data.isEmpty) {
+        participants.value = [];
+        return;
+      }
+
+      List<Map<String, dynamic>> tempParticipants = [];
+      List<String> userIds = [];
+
+      for (var item in data) {
+        String userId = item['user_id']?.toString() ?? '';
+        if (userId.isNotEmpty && !userIds.contains(userId)) {
+          userIds.add(userId);
+        }
+
+        String displayId = item['ticket_code'] ?? item['id'].toString().substring(0, 8).toUpperCase();
+
+        tempParticipants.add({
+          'id': displayId, 
+          'user_id': userId,
+          'status': 'Present', 
+          'created_at': item['created_at'] ?? '', 
+        });
+      }
+
+      Map<String, String> userNames = {};
+      if (userIds.isNotEmpty) {
+        try {
+          final profilesResponse = await _supabase
+              .from('profiles')
+              .select('id, full_name, name')
+              .inFilter('id', userIds); // Gunakan .in_('id', userIds) jika pakai package versi terbaru
+
+          for (var profile in profilesResponse) {
+            userNames[profile['id'].toString()] = profile['full_name'] ?? profile['name'] ?? 'Peserta Anonim';
+          }
+        } catch (e) {
+          print("Error fetch profil peserta: $e");
+        }
+      }
+
+      List<Map<String, dynamic>> finalParticipants = [];
+      for (var p in tempParticipants) {
+        String uid = p['user_id'];
+        
+        finalParticipants.add({
+          'id': p['id'],
+          'name': userNames[uid] ?? 'Peserta Anonim',
+          'status': p['status'],
+          'created_at': p['created_at'],
+        });
+      }
+
+      finalParticipants.sort((a, b) => b['created_at'].compareTo(a['created_at']));
+      participants.value = finalParticipants;
+    }
+
+    // B. Jalankan Stream dengan if-else (Menghindari error tipe data)
+    if (eventName.isNotEmpty) {
+      _supabase
+          .from('attendance')
+          .stream(primaryKey: ['id'])
+          .eq('event_name', eventName)
+          .listen(processData); // <-- Panggil di sini jika ada nama event
+    } else {
+      _supabase
+          .from('attendance')
+          .stream(primaryKey: ['id'])
+          .listen(processData); // <-- Panggil di sini jika tidak difilter
     }
   }
 }

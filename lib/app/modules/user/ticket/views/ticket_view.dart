@@ -348,7 +348,8 @@ class TicketView extends GetView<TicketController> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: () => controller.goToLive(),
+                      onPressed: () =>
+                          controller.goToLive(eventId, title, speaker),
                       icon: const Icon(
                         Icons.live_tv_rounded,
                         color: Colors.white,

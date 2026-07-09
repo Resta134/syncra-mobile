@@ -1,7 +1,6 @@
 // ABSENSI
 import 'dart:io';
 import 'package:camera/camera.dart';
-
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,17 +25,26 @@ class FaceVertivicationController extends GetxController {
   bool isVerifying = false;
 
   // =========================
-  // UI STATE
+  // UI STATE & DATA EVENT
   // =========================
 
   final statusText = "Posisikan wajah di dalam frame".obs;
 
   int stableFrame = 0;
   static const int requiredStableFrame = 8;
+  
+  // 👇 1. TAMBAHKAN VARIABEL PENAMPUNG NAMA EVENT
+  String eventName = 'Syncra Event'; 
 
   @override
   void onInit() {
     super.onInit();
+    
+    // 👇 2. TANGKAP NAMA EVENT AGAR DATA TIDAK BOCOR KE EVENT LAIN
+    if (Get.arguments != null) {
+      eventName = Get.arguments['title'] ?? Get.arguments['nama_event'] ?? Get.arguments['name'] ?? 'Syncra Event';
+    }
+    
     _initialize();
   }
 
@@ -62,8 +70,8 @@ class FaceVertivicationController extends GetxController {
     print(interpreter.getInputTensor(0).shape);
     print(interpreter.getOutputTensor(0).shape);
   }
-  // 3. INISIALISASI KAMERA
 
+  // 3. INISIALISASI KAMERA
   Future<void> _initializeCamera() async {
     cameras = await availableCameras();
 
@@ -93,25 +101,17 @@ class FaceVertivicationController extends GetxController {
     print("📷 Camera Ready");
   }
 
-  // boundingBox ML Kit
   bool _isFaceInsideScanner(Face face) {
     final rect = face.boundingBox;
-
-    // ukuran preview kamera
     final preview = cameraController.value.previewSize!;
 
     final imageWidth = preview.height;
     final imageHeight = preview.width;
 
-    // area scanner (320x320)
     const scannerSize = 320.0;
-
     final scannerLeft = (imageWidth - scannerSize) / 2;
-
     final scannerTop = (imageHeight - scannerSize) / 2;
-
     final scannerRight = scannerLeft + scannerSize;
-
     final scannerBottom = scannerTop + scannerSize;
 
     return rect.left > scannerLeft &&
@@ -144,33 +144,16 @@ class FaceVertivicationController extends GetxController {
 
       final face = faces.first;
 
-      // if (_isFaceInsideScanner(face)) {
-      //   stableFrame++;
-      //   print("Stable : $stableFrame");
-
-      //   statusText.value =
-      //       "Menstabilkan wajah ($stableFrame/$requiredStableFrame)";
-      // } else {
-      //   stableFrame = 0;
-      //   statusText.value = "Posisikan wajah di tengah";
-      //   return;
-      // }
       stableFrame++;
-
-      print("Stable : $stableFrame");
-
-      statusText.value =
-          "Menstabilkan wajah ($stableFrame/$requiredStableFrame)";
+      statusText.value = "Menstabilkan wajah ($stableFrame/$requiredStableFrame)";
 
       if (stableFrame >= requiredStableFrame) {
         stableFrame = 0;
-
         statusText.value = "Memverifikasi...";
 
         await _doFaceVerification(image, face);
         return;
       }
-      print("Stable : $stableFrame");
     } finally {
       isDetecting = false;
     }
@@ -178,22 +161,38 @@ class FaceVertivicationController extends GetxController {
 
   Future<void> _doFaceVerification(CameraImage image, Face face) async {
     if (isVerifying) return;
-
     isVerifying = true;
 
     try {
       final result = await faceService.verifyFace(image, face);
 
+      // 👇 3. LAKUKAN INJEKSI DATA KE SUPABASE SAAT WAJAH COCOK
       if (result != null) {
+        statusText.value = "Menyimpan kehadiran...";
+        
+        try {
+          // ⏱️ Bikin format jam lokal (Contoh: "14:30 WIB")
+          final now = DateTime.now();
+          final jamSekarang = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
+
+          // 🚀 Tembakkan semua datanya ke Supabase
+          await supabase.from('attendance').insert({
+            'event_name': eventName,
+            'user_id': result.id,
+            'full_name': result.name, 
+            'waktu_checkin': jamSekarang, 
+          });
+          
+          print("✅ Data kehadiran lengkap berhasil disimpan!");
+        } catch (dbError) {
+          print("⚠️ Database Error: $dbError");
+        }
+
         statusText.value = "Verifikasi berhasil";
 
         await cameraController.stopImageStream();
-
-        print("AAAAAAAAAAAA");
-        print(result.name);
-        print("BBBBBBBBBBBB");
+        
         _showSuccessPopup(result.name);
-
         return;
       }
 
@@ -203,11 +202,9 @@ class FaceVertivicationController extends GetxController {
       statusText.value = "Posisikan wajah di dalam frame";
 
       stableFrame = 0;
-
       isVerifying = false;
     } catch (e) {
       print(e);
-
       isVerifying = false;
     }
   }
@@ -224,16 +221,13 @@ class FaceVertivicationController extends GetxController {
         await Future.delayed(const Duration(milliseconds: 1200));
 
         statusText.value = "Posisikan wajah di dalam frame";
-
         stableFrame = 0;
-
         isVerifying = false;
         isDetecting = false;
 
         if (!cameraController.value.isStreamingImages) {
           await cameraController.startImageStream((image) {
             if (!isCameraInitialized.value) return;
-
             _doFaceDetection(image);
           });
         }
@@ -244,11 +238,8 @@ class FaceVertivicationController extends GetxController {
   @override
   void onClose() {
     cameraController.dispose();
-
     faceDetector.close();
-
     interpreter.close();
-
     super.onClose();
   }
 

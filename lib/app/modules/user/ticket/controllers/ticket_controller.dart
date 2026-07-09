@@ -307,7 +307,17 @@ class TicketController extends GetxController {
   // ==========================================
   // Navigasi
   // ==========================================
-  void goToLive() => Get.toNamed('/live');
+  void goToLive(String eventId, String title, String speaker) {
+    Get.toNamed(
+      '/live',
+      arguments: {
+        'id': eventId,
+        'title': title,
+        'speaker': speaker,
+      },
+    );
+  }
+
   void goToDashboard() => Get.toNamed('/dashboard');
   void goToProfil() => Get.toNamed('/profil');
   void goToTicket() => Get.toNamed('/ticket');
