@@ -63,7 +63,7 @@ class DashboardController extends GetxController {
   }
 
   void goToLive() {
-    Get.toNamed('/live-room');
+    Get.toNamed('/live');
   }
 
   void goToEventDetail(Map<String, dynamic> data) {

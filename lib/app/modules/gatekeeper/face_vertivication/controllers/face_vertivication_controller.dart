@@ -9,7 +9,7 @@ import 'package:tranlator_v1/app/modules/gatekeeper/face_vertivication/helpers/i
 import 'package:tranlator_v1/app/modules/gatekeeper/face_vertivication/services/face_service.dart';
 
 class FaceVertivicationController extends GetxController {
-  late CameraController cameraController;
+  CameraController? cameraController;
   late List<CameraDescription> cameras;
 
   final isCameraInitialized = false.obs;
@@ -88,9 +88,9 @@ class FaceVertivicationController extends GetxController {
           : ImageFormatGroup.bgra8888,
     );
 
-    await cameraController.initialize();
+    await cameraController!.initialize();
 
-    cameraController.startImageStream((image) {
+    cameraController!.startImageStream((image) {
       if (!isCameraInitialized.value) return;
 
       _doFaceDetection(image);
@@ -103,7 +103,7 @@ class FaceVertivicationController extends GetxController {
 
   bool _isFaceInsideScanner(Face face) {
     final rect = face.boundingBox;
-    final preview = cameraController.value.previewSize!;
+    final preview = cameraController!.value.previewSize!;
 
     final imageWidth = preview.height;
     final imageHeight = preview.width;
@@ -129,7 +129,7 @@ class FaceVertivicationController extends GetxController {
     try {
       final inputImage = ImageHelper.cameraImageToInputImage(
         image,
-        cameraController.description,
+        cameraController!.description,
       );
 
       if (inputImage == null) return;
@@ -190,7 +190,7 @@ class FaceVertivicationController extends GetxController {
 
         statusText.value = "Verifikasi berhasil";
 
-        await cameraController.stopImageStream();
+        await cameraController?.stopImageStream();
         
         _showSuccessPopup(result.name);
         return;
@@ -225,8 +225,8 @@ class FaceVertivicationController extends GetxController {
         isVerifying = false;
         isDetecting = false;
 
-        if (!cameraController.value.isStreamingImages) {
-          await cameraController.startImageStream((image) {
+        if (cameraController != null && !cameraController!.value.isStreamingImages) {
+          await cameraController!.startImageStream((image) {
             if (!isCameraInitialized.value) return;
             _doFaceDetection(image);
           });
@@ -237,17 +237,17 @@ class FaceVertivicationController extends GetxController {
 
   @override
   void onClose() {
-    cameraController.dispose();
+    cameraController?.dispose();
     faceDetector.close();
     interpreter.close();
     super.onClose();
   }
 
   void dashboard() {
-    Get.toNamed('dashboard-gatekeeper');
+    Get.toNamed('/dashboard-gatekeeper');
   }
 
   void qr() {
-    Get.toNamed('qr-scanner');
+    Get.toNamed('/qr-scanner');
   }
 }

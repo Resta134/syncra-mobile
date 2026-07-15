@@ -14,10 +14,10 @@ class UserValidationView extends GetView<UserValidationController> {
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 20),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Validasi Peserta', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Validasi Peserta', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         centerTitle: true,
       ),
       body: Column(

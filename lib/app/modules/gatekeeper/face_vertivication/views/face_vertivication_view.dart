@@ -18,7 +18,7 @@ class FaceVertivicationView extends GetView<FaceVertivicationController> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF89CEFF)),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF89CEFF), size: 20),
           onPressed: () => controller.dashboard(),
         ),
         title: const Text(
@@ -89,16 +89,16 @@ class FaceVertivicationView extends GetView<FaceVertivicationController> {
                         fit: BoxFit.cover,
                         child: SizedBox(
                           width: controller
-                              .cameraController
+                              .cameraController!
                               .value
                               .previewSize!
                               .height,
                           height: controller
-                              .cameraController
+                              .cameraController!
                               .value
                               .previewSize!
                               .width,
-                          child: CameraPreview(controller.cameraController),
+                          child: CameraPreview(controller.cameraController!),
                         ),
                       );
                     }),

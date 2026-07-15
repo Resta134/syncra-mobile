@@ -30,6 +30,7 @@ abstract class Routes {
   static const AUTH_SPLASH = _Paths.AUTH_SPLASH;
   static const AUTH_VERIFY_OTP = _Paths.AUTH_VERIFY_OTP;
   static const SCAN_PAGE = _Paths.SCAN_PAGE;
+  static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
 }
 
 abstract class _Paths {
@@ -61,4 +62,5 @@ abstract class _Paths {
   static const AUTH_SPLASH = '/splash';
   static const AUTH_VERIFY_OTP = '/verify-otp';
   static const SCAN_PAGE = '/scan-page';
+  static const FORGOT_PASSWORD = '/forgot-password';
 }

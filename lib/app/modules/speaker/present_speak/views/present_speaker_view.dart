@@ -13,7 +13,7 @@ class PresentSpeakerView extends GetView<SpeakerController> {
         backgroundColor: const Color(0xFF1E293B), // Navy Premium
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
         title: const Text(

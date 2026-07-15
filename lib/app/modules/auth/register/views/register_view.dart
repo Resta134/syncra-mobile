@@ -42,19 +42,19 @@ class RegisterView extends GetView<RegisterController> {
                 // ==========================================
                 // 2. TEKS JUDUL
                 // ==========================================
-                const Text(
-                  "Buat Akun Baru",
-                  style: TextStyle(
+                Text(
+                  'register_title'.tr,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2D3748),
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  "Daftarkan diri Anda untuk bergabung ke Syncro",
+                Text(
+                  'register_subtitle'.tr,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 35),
 
@@ -63,7 +63,7 @@ class RegisterView extends GetView<RegisterController> {
                 // ==========================================
                 _buildSoftShadowTextField(
                   controller: controller.nameC,
-                  hintText: "Nama Lengkap",
+                  hintText: 'register_full_name_hint'.tr,
                   icon: Icons.person_outline,
                 ),
                 const SizedBox(height: 20),
@@ -73,7 +73,7 @@ class RegisterView extends GetView<RegisterController> {
                 // ==========================================
                 _buildSoftShadowTextField(
                   controller: controller.emailC,
-                  hintText: "Email",
+                  hintText: 'login_email_hint'.tr,
                   icon: Icons.email_outlined,
                   inputType: TextInputType.emailAddress,
                 ),
@@ -84,7 +84,7 @@ class RegisterView extends GetView<RegisterController> {
                 // ==========================================
                 _buildSoftShadowTextField(
                   controller: controller.passC,
-                  hintText: "Password",
+                  hintText: 'login_password_hint'.tr,
                   icon: Icons.lock_outline,
                   isPassword: true,
                 ),
@@ -118,9 +118,9 @@ class RegisterView extends GetView<RegisterController> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              "Daftar",
-                              style: TextStyle(
+                          : Text(
+                              'register_btn'.tr,
+                              style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -143,7 +143,7 @@ class RegisterView extends GetView<RegisterController> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Text(
-                        "Atau daftar dengan",
+                        'register_or_with'.tr,
                         style: TextStyle(color: Colors.grey[400], fontSize: 12),
                       ),
                     ),
@@ -180,7 +180,7 @@ class RegisterView extends GetView<RegisterController> {
                         Image.asset('assets/images/googleSymbol.png', height: 24),
                         const SizedBox(width: 12),
                         Text(
-                          "Daftar dengan Google",
+                          'register_google_btn'.tr,
                           style: TextStyle(
                             color: Colors.grey[700],
                             fontSize: 14,
@@ -200,14 +200,14 @@ class RegisterView extends GetView<RegisterController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Sudah punya akun? ",
+                      'register_already_have_account'.tr,
                       style: TextStyle(color: Colors.grey[500], fontSize: 13),
                     ),
                     GestureDetector(
                       onTap: () => Get.back(), 
-                      child: const Text(
-                        "Masuk di sini",
-                        style: TextStyle(
+                      child: Text(
+                        'register_login_here'.tr,
+                        style: const TextStyle(
                           color: Colors.blueAccent,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,

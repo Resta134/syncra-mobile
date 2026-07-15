@@ -17,28 +17,28 @@ class CustomBottomNavBar extends StatelessWidget {
     switch (role.toLowerCase()) {
       case 'moderator':
         return [
-          {'icon': Icons.home_filled, 'label': 'Home', 'route': Routes.DASHBOARD_MOD},
-          {'icon': Icons.question_answer_outlined, 'label': 'Q&A', 'route': Routes.QA},
-          {'icon': Icons.person_outline, 'label': 'Profile', 'route': Routes.PROFIL},
+          {'icon': Icons.home_filled, 'label': 'nav_home'.tr, 'route': Routes.DASHBOARD_MOD},
+          {'icon': Icons.question_answer_outlined, 'label': 'nav_qa'.tr, 'route': Routes.QA},
+          {'icon': Icons.person_outline, 'label': 'nav_profile'.tr, 'route': Routes.PROFIL},
         ];
       case 'gatekeeper':
         return [
-          {'icon': Icons.home_filled, 'label': 'Home', 'route': Routes.DASHBOARD_GATEKEEPER},
-          {'icon': Icons.people_outline, 'label': 'Peserta', 'route': Routes.USER_VALIDATION},
-          {'icon': Icons.person_outline, 'label': 'Profile', 'route': Routes.PROFIL},
+          {'icon': Icons.home_filled, 'label': 'nav_home'.tr, 'route': Routes.DASHBOARD_GATEKEEPER},
+          {'icon': Icons.people_outline, 'label': 'nav_peserta'.tr, 'route': Routes.USER_VALIDATION},
+          {'icon': Icons.person_outline, 'label': 'nav_profile'.tr, 'route': Routes.PROFIL},
         ];
       case 'speaker':
         return [
-          {'icon': Icons.home_filled, 'label': 'Home', 'route': Routes.DASHBOARD_SPEAK},
-          {'icon': Icons.question_answer_outlined, 'label': 'Q&A', 'route': Routes.Q_A_SPEAK},
-          {'icon': Icons.person_outline, 'label': 'Profile', 'route': Routes.PROFIL},
+          {'icon': Icons.home_filled, 'label': 'nav_home'.tr, 'route': Routes.DASHBOARD_SPEAK},
+          {'icon': Icons.question_answer_outlined, 'label': 'nav_qa'.tr, 'route': Routes.Q_A_SPEAK},
+          {'icon': Icons.person_outline, 'label': 'nav_profile'.tr, 'route': Routes.PROFIL},
         ];
       case 'user':
       default:
         return [
-          {'icon': Icons.home_filled, 'label': 'Home', 'route': Routes.DASHBOARD},
-          {'icon': Icons.confirmation_num_outlined, 'label': 'Tickets', 'route': Routes.TICKET},
-          {'icon': Icons.person_outline, 'label': 'Profile', 'route': Routes.PROFIL},
+          {'icon': Icons.home_filled, 'label': 'nav_home'.tr, 'route': Routes.DASHBOARD},
+          {'icon': Icons.confirmation_num_outlined, 'label': 'nav_tickets'.tr, 'route': Routes.TICKET},
+          {'icon': Icons.person_outline, 'label': 'nav_profile'.tr, 'route': Routes.PROFIL},
         ];
     }
   }

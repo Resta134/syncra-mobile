@@ -13,7 +13,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.blueAccent),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.blueAccent, size: 20),
           onPressed: () => Get.back(),
         ),
       ),

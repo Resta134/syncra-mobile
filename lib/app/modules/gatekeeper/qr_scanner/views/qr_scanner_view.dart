@@ -33,6 +33,10 @@ class QrScannerView extends GetView<QrScannerController> {
                   child: Container(
                     width: 280,
                     height: 280,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                   ),
                 ),
               ],
@@ -69,7 +73,7 @@ class QrScannerView extends GetView<QrScannerController> {
     children: [
       IconButton(
         onPressed: () => controller.dashboard(),
-        icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 255, 255, 255)),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color.fromARGB(255, 255, 255, 255), size: 20),
       ),
       const Expanded(child: Text("Scan QR Tiket", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
       const SizedBox(width: 48), // Spacer untuk keseimbangan

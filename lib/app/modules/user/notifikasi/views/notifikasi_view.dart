@@ -13,7 +13,10 @@ class NotifikasiView extends GetView<NotifikasiController> {
         elevation: 0,
         backgroundColor: Colors.white,
         centerTitle: true,
-        automaticallyImplyLeading: false, // Menghilangkan tombol back default jika ini main menu
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B), size: 20),
+          onPressed: () => Get.back(),
+        ),
         title: const Text(
           'Notifikasi',
           style: TextStyle(
@@ -25,22 +28,39 @@ class NotifikasiView extends GetView<NotifikasiController> {
         ),
       ),
       body: Obx(() {
+        if (controller.isLoading.value && controller.notifications.isEmpty) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFF0038FF),
+            ),
+          );
+        }
+
         // Jika tidak ada notifikasi
         if (controller.notifications.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          return RefreshIndicator(
+            onRefresh: () => controller.fetchNotifications(),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                Icon(Icons.notifications_off_outlined, size: 80, color: Colors.grey[300]),
-                const SizedBox(height: 15),
-                Text(
-                  "Belum ada notifikasi",
-                  style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  "Pembaruan event dan tiket akan muncul di sini.",
-                  style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_off_outlined, size: 80, color: Colors.grey[300]),
+                      const SizedBox(height: 15),
+                      Text(
+                        "Belum ada notifikasi",
+                        style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        "Pembaruan event dan tiket akan muncul di sini.",
+                        style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -48,22 +68,25 @@ class NotifikasiView extends GetView<NotifikasiController> {
         }
 
         // Jika ada notifikasi (Looping data)
-        return ListView.separated(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          itemCount: controller.notifications.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final notif = controller.notifications[index];
-            return _buildNotificationCard(
-              type: notif['type']!,
-              title: notif['title']!,
-              message: notif['message']!,
-              time: notif['time']!,
-              buttonText: notif['button_text']!,
-              onTap: () => controller.onNotificationTap(notif['type']!),
-            );
-          },
+        return RefreshIndicator(
+          onRefresh: () => controller.fetchNotifications(),
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            itemCount: controller.notifications.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 20),
+            itemBuilder: (context, index) {
+              final notif = controller.notifications[index];
+              return _buildNotificationCard(
+                type: notif['type']!,
+                title: notif['title']!,
+                message: notif['message']!,
+                time: notif['time']!,
+                buttonText: notif['button_text']!,
+                onTap: () => controller.onNotificationTap(notif['type']!),
+              );
+            },
+          ),
         );
       }),
     );
@@ -100,12 +123,12 @@ class NotifikasiView extends GetView<NotifikasiController> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey.withOpacity(0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
+            color: Colors.blueGrey.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
         border: Border.all(color: Colors.grey.shade100),
@@ -169,12 +192,12 @@ class NotifikasiView extends GetView<NotifikasiController> {
                   alignment: Alignment.centerRight,
                   child: InkWell(
                     onTap: onTap,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: primaryColor,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
                             color: primaryColor.withOpacity(0.3),

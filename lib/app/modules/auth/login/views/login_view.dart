@@ -42,18 +42,18 @@ class LoginView extends GetView<LoginController> {
                 // ==========================================
                 // 2. TEKS SAMBUTAN (Bahasa Indonesia)
                 // ==========================================
-                const Text(
-                  "Selamat Datang!",
-                  style: TextStyle(
+                Text(
+                  'login_welcome_title'.tr,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2D3748),
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  "Silakan masuk ke akun Syncro Anda",
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Text(
+                  'login_welcome_subtitle'.tr,
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 40),
 
@@ -62,7 +62,7 @@ class LoginView extends GetView<LoginController> {
                 // ==========================================
                 _buildSoftShadowTextField(
                   controller: controller.emailC,
-                  hintText: "Email",
+                  hintText: 'login_email_hint'.tr,
                   icon: Icons.person_outline,
                   inputType: TextInputType.emailAddress,
                 ),
@@ -73,27 +73,19 @@ class LoginView extends GetView<LoginController> {
                 // ==========================================
                 _buildSoftShadowTextField(
                   controller: controller.passC,
-                  hintText: "Password",
+                  hintText: 'login_password_hint'.tr,
                   icon: Icons.lock_outline,
                   isPassword: true,
                 ),
                 const SizedBox(height: 10),
 
-                // ==========================================
-                // 5. TOMBOL LUPA PASSWORD
-                // ==========================================
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      Get.snackbar(
-                        "Info",
-                        "Fitur Lupa Password sedang dikembangkan.",
-                      );
-                    },
-                    child: const Text(
-                      "Lupa Password?",
-                      style: TextStyle(
+                    onPressed: () => Get.toNamed('/forgot-password'),
+                    child: Text(
+                      'login_forgot_password'.tr,
+                      style: const TextStyle(
                         color: Colors.blueAccent,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -131,9 +123,9 @@ class LoginView extends GetView<LoginController> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              "Masuk",
-                              style: TextStyle(
+                          : Text(
+                              'login_btn'.tr,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -156,7 +148,7 @@ class LoginView extends GetView<LoginController> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Text(
-                        "Atau masuk dengan",
+                        'login_or_with'.tr,
                         style: TextStyle(color: Colors.grey[400], fontSize: 12),
                       ),
                     ),
@@ -171,13 +163,7 @@ class LoginView extends GetView<LoginController> {
                 // 8. TOMBOL LOGIN GOOGLE (Google Sign-In)
                 // ==========================================
                 InkWell(
-                  onTap: () {
-                    // Nanti bisa disambungkan ke fungsi Google SignIn Supabase
-                    Get.snackbar(
-                      "Info",
-                      "Otentikasi Google sedang diintegrasikan.",
-                    );
-                  },
+                  onTap: () => controller.signInWithGoogle(),
                   borderRadius: BorderRadius.circular(30),
                   child: Container(
                     width: double.infinity,
@@ -199,7 +185,7 @@ class LoginView extends GetView<LoginController> {
                         Image.asset('assets/images/googleSymbol.png', height: 24),
                         const SizedBox(width: 12),
                         Text(
-                          "Masuk dengan Google",
+                          'login_google_btn'.tr,
                           style: TextStyle(
                             color: Colors.grey[700],
                             fontSize: 14,
@@ -219,15 +205,15 @@ class LoginView extends GetView<LoginController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Belum punya akun? ",
+                      'login_dont_have_account'.tr,
                       style: TextStyle(color: Colors.grey[500], fontSize: 13),
                     ),
                     GestureDetector(
                       onTap: () =>
                           controller.goToSignUp(), // Pindah ke halaman Register
-                      child: const Text(
-                        "Buat Akun di sini",
-                        style: TextStyle(
+                      child: Text(
+                        'login_register_here'.tr,
+                        style: const TextStyle(
                           color: Colors.blueAccent,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,

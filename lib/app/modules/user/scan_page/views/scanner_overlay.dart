@@ -16,25 +16,31 @@ class ScannerOverlay extends StatefulWidget {
 
 class _ScannerOverlayState extends State<ScannerOverlay>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  AnimationController? _animationController;
+  Animation<double>? _animation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
+    try {
+      _animationController = AnimationController(
+        duration: const Duration(seconds: 2),
+        vsync: this,
+      );
 
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
+      _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+      );
+
+      _animationController!.repeat(reverse: true);
+    } catch (e) {
+      debugPrint("Error initializing ScannerOverlay animation: $e");
+    }
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _animationController?.dispose();
     super.dispose();
   }
 
@@ -54,29 +60,30 @@ class _ScannerOverlayState extends State<ScannerOverlay>
           ),
 
           // 2. Garis Scanner Bergerak
-          AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return Positioned(
-                top: _animation.value * (widget.height - 4),
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF89CEFF), // Primary Cyan
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF89CEFF).withOpacity(0.8),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ],
+          if (_animation != null)
+            AnimatedBuilder(
+              animation: _animation!,
+              builder: (context, child) {
+                return Positioned(
+                  top: _animation!.value * (widget.height - 4),
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF89CEFF), // Primary Cyan
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF89CEFF).withOpacity(0.8),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
         ],
       ),
     );

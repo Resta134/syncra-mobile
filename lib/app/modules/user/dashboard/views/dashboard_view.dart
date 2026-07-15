@@ -102,9 +102,9 @@ class DashboardView extends GetView<DashboardController> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Sedang Berlangsung', // Diubah ke Bahasa Indonesia
-                    style: TextStyle(
+                  Text(
+                    'dash_ongoing'.tr,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1E293B),
@@ -124,7 +124,7 @@ class DashboardView extends GetView<DashboardController> {
                 if (controller.liveStreamData.isEmpty) {
                   return Center(
                     child: Text(
-                      "Belum ada event yang sedang live.",
+                      'dash_no_live'.tr,
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
                   );
@@ -167,9 +167,9 @@ class DashboardView extends GetView<DashboardController> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Event Mendatang', // Diubah ke Bahasa Indonesia
-                    style: TextStyle(
+                  Text(
+                    'dash_upcoming'.tr,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1E293B),
@@ -177,9 +177,9 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                   InkWell(
                     onTap: () => controller.goToEvents(),
-                    child: const Text(
-                      'Lihat Semua', // Diubah ke Bahasa Indonesia
-                      style: TextStyle(
+                    child: Text(
+                      'dash_see_all'.tr,
+                      style: const TextStyle(
                         color: Colors.blueAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -205,7 +205,7 @@ class DashboardView extends GetView<DashboardController> {
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Text(
-                      "Belum ada event mendatang.",
+                      'dash_no_upcoming'.tr,
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
                   ),

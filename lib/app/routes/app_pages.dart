@@ -8,6 +8,8 @@ import '../modules/auth/splash/bindings/splash_binding.dart';
 import '../modules/auth/splash/views/splash_view.dart';
 import '../modules/auth/verify_otp/bindings/verify_otp_binding.dart';
 import '../modules/auth/verify_otp/views/verify_otp_view.dart';
+import '../modules/auth/forgot_password/bindings/forgot_password_binding.dart';
+import '../modules/auth/forgot_password/views/forgot_password_view.dart';
 import '../modules/gatekeeper/dashboard_gatekeeper/bindings/dashboard_gatekeeper_binding.dart';
 import '../modules/gatekeeper/dashboard_gatekeeper/views/dashboard_gatekeeper_view.dart';
 import '../modules/gatekeeper/face_vertivication/bindings/face_vertivication_binding.dart';
@@ -194,6 +196,11 @@ class AppPages {
       name: _Paths.SCAN_PAGE,
       page: () => const ScanPageView(),
       binding: ScanPageBinding(),
+    ),
+    GetPage(
+      name: _Paths.FORGOT_PASSWORD,
+      page: () => const ForgotPasswordView(),
+      binding: ForgotPasswordBinding(),
     ),
   ];
 }
