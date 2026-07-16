@@ -1,6 +1,7 @@
 // ABSENSI
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,19 +29,17 @@ class FaceVertivicationController extends GetxController {
   // UI STATE & DATA EVENT
   // =========================
 
-  final statusText = "Posisikan wajah di dalam frame".obs;
+  final statusText = "Posisikan wajah di dalam bingkai".obs;
 
   int stableFrame = 0;
   static const int requiredStableFrame = 8;
   
-  // 👇 1. TAMBAHKAN VARIABEL PENAMPUNG NAMA EVENT
   String eventName = 'Syncra Event'; 
 
   @override
   void onInit() {
     super.onInit();
     
-    // 👇 2. TANGKAP NAMA EVENT AGAR DATA TIDAK BOCOR KE EVENT LAIN
     if (Get.arguments != null) {
       eventName = Get.arguments['title'] ?? Get.arguments['nama_event'] ?? Get.arguments['name'] ?? 'Syncra Event';
     }
@@ -49,7 +48,6 @@ class FaceVertivicationController extends GetxController {
   }
 
   Future<void> _initialize() async {
-    // Face Detector
     faceDetector = FaceDetector(
       options: FaceDetectorOptions(
         enableTracking: true,
@@ -57,21 +55,15 @@ class FaceVertivicationController extends GetxController {
       ),
     );
 
-    // MobileFaceNet
     interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite');
-
     faceService = FaceService(interpreter: interpreter, supabase: supabase);
 
     await faceService.loadRegisteredUsers();
-
     await _initializeCamera();
 
-    print("✅ Face Verification Ready");
-    print(interpreter.getInputTensor(0).shape);
-    print(interpreter.getOutputTensor(0).shape);
+    print("✅ [Controller Ready] Pemindai siap digunakan.");
   }
 
-  // 3. INISIALISASI KAMERA
   Future<void> _initializeCamera() async {
     cameras = await availableCameras();
 
@@ -92,13 +84,11 @@ class FaceVertivicationController extends GetxController {
 
     cameraController!.startImageStream((image) {
       if (!isCameraInitialized.value) return;
-
       _doFaceDetection(image);
     });
 
     isCameraInitialized.value = true;
-
-    print("📷 Camera Ready");
+    print("📷 [Camera] Kamera depan aktif.");
   }
 
   bool _isFaceInsideScanner(Face face) {
@@ -120,7 +110,6 @@ class FaceVertivicationController extends GetxController {
         rect.bottom < scannerBottom;
   }
 
-  // 4. DETEKSI WAJAH DI FRAME
   Future<void> _doFaceDetection(CameraImage image) async {
     if (isDetecting || isVerifying) return;
 
@@ -138,18 +127,19 @@ class FaceVertivicationController extends GetxController {
 
       if (faces.isEmpty) {
         stableFrame = 0;
-        statusText.value = "Arahkan wajah ke frame";
+        statusText.value = "Arahkan wajah ke dalam bingkai";
         return;
       }
 
       final face = faces.first;
 
       stableFrame++;
-      statusText.value = "Menstabilkan wajah ($stableFrame/$requiredStableFrame)";
+      // UX Update: Teks lebih rapi tanpa menunjukkan angka konstan internal
+      statusText.value = "Wajah terdeteksi, tahan posisi...";
 
       if (stableFrame >= requiredStableFrame) {
         stableFrame = 0;
-        statusText.value = "Memverifikasi...";
+        statusText.value = "Memverifikasi data...";
 
         await _doFaceVerification(image, face);
         return;
@@ -160,78 +150,136 @@ class FaceVertivicationController extends GetxController {
   }
 
   Future<void> _doFaceVerification(CameraImage image, Face face) async {
-    if (isVerifying) return;
-    isVerifying = true;
+  if (isVerifying) return; // Mencegah proses ganda
+  isVerifying = true; // Kunci proses
 
-    try {
-      final result = await faceService.verifyFace(image, face);
+  try {
+    final result = await faceService.verifyFace(image, face);
 
-      // 👇 3. LAKUKAN INJEKSI DATA KE SUPABASE SAAT WAJAH COCOK
-      if (result != null) {
-        statusText.value = "Menyimpan kehadiran...";
+    if (result != null) {
+      statusText.value = "Mencatat kehadiran...";
+      
+      // Stop stream SEBELUM menyimpan agar tidak ada deteksi ganda di latar belakang
+      await cameraController?.stopImageStream();
+      
+      try {
+        final now = DateTime.now();
+        final jamSekarang = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
+
+        // Tambahkan pengecekan atau gunakan upsert jika ingin mengizinkan update
+        await supabase.from('attendance').insert({
+          'event_name': eventName,
+          'user_id': result.id,
+          'full_name': result.name, 
+          'waktu_checkin': jamSekarang, 
+        });
         
-        try {
-          // ⏱️ Bikin format jam lokal (Contoh: "14:30 WIB")
-          final now = DateTime.now();
-          final jamSekarang = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
-
-          // 🚀 Tembakkan semua datanya ke Supabase
-          await supabase.from('attendance').insert({
-            'event_name': eventName,
-            'user_id': result.id,
-            'full_name': result.name, 
-            'waktu_checkin': jamSekarang, 
-          });
-          
-          print("✅ Data kehadiran lengkap berhasil disimpan!");
-        } catch (dbError) {
-          print("⚠️ Database Error: $dbError");
-        }
-
-        statusText.value = "Verifikasi berhasil";
-
-        await cameraController?.stopImageStream();
-        
-        _showSuccessPopup(result.name);
-        return;
+        print("✅ [Database] Kehadiran a.n ${result.name} berhasil disimpan!");
+      } catch (dbError) {
+        print("⚠️ [Database Error]: $dbError");
+        // Jika error karena sudah absen, tetap tampilkan pop-up sukses/info
       }
 
-      statusText.value = "Wajah tidak dikenali";
-
-      await Future.delayed(const Duration(milliseconds: 1200));
-      statusText.value = "Posisikan wajah di dalam frame";
-
-      stableFrame = 0;
-      isVerifying = false;
-    } catch (e) {
-      print(e);
-      isVerifying = false;
+      statusText.value = "Verifikasi Berhasil!";
+      _showSuccessPopup(result.name);
+      return; // Keluar dari fungsi setelah sukses
     }
-  }
 
+    // Jika hasil null (tidak dikenali)
+    statusText.value = "Wajah tidak dikenali";
+    await Future.delayed(const Duration(milliseconds: 1200));
+    statusText.value = "Posisikan wajah di dalam bingkai";
+    stableFrame = 0;
+    isVerifying = false; // Buka kunci agar bisa memindai lagi
+  } catch (e) {
+    print("❌ [Verification Error] $e");
+    isVerifying = false;
+  }
+}
+  // =========================================================
+  // UX UPGRADE: POP-UP SUKSES MODERN (DARK GLASSMORPHISM)
+  // =========================================================
   void _showSuccessPopup(String name) {
     Get.defaultDialog(
-      title: "Check In Berhasil",
-      middleText: "Selamat datang,\n$name",
+      title: "Check-In Berhasil! ✅",
+      titleStyle: const TextStyle(
+        color: Color(0xFF00dbe7),
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      ),
+      backgroundColor: const Color(0xFF010f1f),
+      radius: 20,
       barrierDismissible: false,
-      textConfirm: "OK",
-      onConfirm: () async {
-        Get.back();
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      content: Column(
+        children: [
+          const SizedBox(height: 5),
+          const Icon(
+            Icons.verified_user_rounded,
+            color: Color(0xFF00dbe7),
+            size: 50,
+          ),
+          const SizedBox(height: 15),
+          Text(
+            "Selamat datang,\n$name",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            "Kehadiran Anda pada '$eventName' telah tercatat.",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00dbe7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              onPressed: () async {
+                Get.back(); // Tutup Pop-up
 
-        await Future.delayed(const Duration(milliseconds: 1200));
+                await Future.delayed(const Duration(milliseconds: 500));
 
-        statusText.value = "Posisikan wajah di dalam frame";
-        stableFrame = 0;
-        isVerifying = false;
-        isDetecting = false;
+                statusText.value = "Posisikan wajah di dalam bingkai";
+                stableFrame = 0;
+                isVerifying = false;
+                isDetecting = false;
 
-        if (cameraController != null && !cameraController!.value.isStreamingImages) {
-          await cameraController!.startImageStream((image) {
-            if (!isCameraInitialized.value) return;
-            _doFaceDetection(image);
-          });
-        }
-      },
+                // Nyalakan kembali stream kamera secara aman
+                if (cameraController != null && !cameraController!.value.isStreamingImages) {
+                  await cameraController!.startImageStream((image) {
+                    if (!isCameraInitialized.value) return;
+                    _doFaceDetection(image);
+                  });
+                }
+              },
+              child: const Text(
+                "Lanjutkan Scan",
+                style: TextStyle(
+                  color: Color(0xFF010f1f),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

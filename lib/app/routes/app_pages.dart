@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:tranlator_v1/app/modules/auth/login/controllers/login_controller.dart';
 
 import '../modules/auth/login/bindings/login_binding.dart';
 import '../modules/auth/login/views/login_view.dart';
@@ -79,10 +80,14 @@ class AppPages {
       page: () => const RegisterView(),
       binding: RegisterBinding(),
     ),
+    // CARA YANG BENAR DI APP_PAGES.DART:
     GetPage(
-      name: _Paths.LOGIN,
+      name: '/login',
       page: () => const LoginView(),
-      binding: LoginBinding(),
+      binding: BindingsBuilder(() {
+        // Gunakan Get.lazyPut dengan fenix: true agar otomatis dibuat baru jika sudah mati
+        Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
+      }),
     ),
     GetPage(
       name: _Paths.EVENTS,

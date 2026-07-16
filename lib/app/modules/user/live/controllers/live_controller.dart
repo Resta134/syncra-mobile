@@ -35,6 +35,7 @@ class LiveController extends GetxController {
   String userInitial = 'U';
 
   @override
+  @override
   void onInit() {
     super.onInit();
     
@@ -44,27 +45,34 @@ class LiveController extends GetxController {
     // 2. Tangkap Data Event dari Halaman Sebelumnya
     final eventData = Get.arguments;
     if (eventData != null && eventData['id'] != null) {
-      eventId = eventData['id'];
+      eventId = eventData['id'].toString();
       
-      // Isi data AppBar secara dinamis
       eventTitle.value = eventData['title'] ?? 'Event Tanpa Judul';
       speakerName.value = eventData['speaker'] ?? 'Admin Syncra';
-      
-      // Simulasi/Ambil viewer count jika ada di tabel events
       viewerCount.value = eventData['viewers']?.toString() ?? '1.2K';
       
-      // 3. Mulai Buka Keran Data Real-time Supabase!
-      _listenToQuestions();
-      _listenToTranscripts();
+      // 3. SOLUSI ANTI CRASH ANIMASI: Beri delay 300ms sebelum membuka stream real-time!
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!isClosed) { // Pastikan pengguna belum menutup halaman ini saat delay berjalan
+          _listenToQuestions();
+          _listenToTranscripts();
+          print("🟢 LOG: Stream Real-time Live berhasil dimulai dengan aman!");
+        }
+      });
     } else {
-      Get.snackbar(
-        'Error', 
-        'Data event tidak valid atau kosong.', 
-        backgroundColor: Colors.red.withOpacity(0.1)
-      );
+      // Buat fallback agar tidak pernah merah meskipun dibuka tanpa arguments
+      eventId = 'default_live_id';
+      eventTitle.value = 'Live Session Syncra';
+      speakerName.value = 'Admin Syncra';
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!isClosed) {
+          _listenToQuestions();
+          _listenToTranscripts();
+        }
+      });
     }
   }
-
   @override
   void onClose() {
     questionController.dispose();

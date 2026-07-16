@@ -5,16 +5,27 @@ import 'package:google_sign_in/google_sign_in.dart' as g_auth;
 import 'package:tranlator_v1/app/utils/audit_log.dart';
 
 class LoginController extends GetxController {
+  // =========================================================================
+  // SOLUSI SUPER AMPUH: Shared Static Memory
+  // Membuat form ketiakanmu KEBAL dari reset atau Zombie Controller GetX!
+  // =========================================================================
+  static final _sharedEmailC = TextEditingController();
+  static final _sharedPassC = TextEditingController();
+
+  // Getter agar LoginView kamu tetap bisa pakai 'controller.emailC' tanpa ubah kode UI
+  TextEditingController get emailC => _sharedEmailC;
+  TextEditingController get passC => _sharedPassC;
+
   final SupabaseClient _supabase = Supabase.instance.client;
-
-  // Controller untuk form input
-  final emailC = TextEditingController();
-  final passC = TextEditingController();
-
-  // State untuk animasi loading pada tombol
   var isLoading = false.obs;
 
-  // Fungsi navigasi ke halaman pendaftaran (Register)
+  @override
+  void onInit() {
+    super.onInit();
+    // PENTING: Jangan PERNAH menaruh emailC.clear() di sini!
+    print("✨ LOG: LoginController siap - Memori Form Aman!");
+  }
+
   void goToSignUp() {
     Get.toNamed('/register');
   }
@@ -23,7 +34,6 @@ class LoginController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Web Client ID dari Google Cloud Console
       const webClientId =
           '303118747448-8cn075h1q85c0p7t6nkhmu7csttbhjr0.apps.googleusercontent.com';
 
@@ -32,9 +42,7 @@ class LoginController extends GetxController {
       );
 
       final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        return; // Dibatalkan oleh user
-      }
+      if (googleUser == null) return;
 
       final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
@@ -52,10 +60,8 @@ class LoginController extends GetxController {
       );
 
       if (response.user != null) {
-        // Cek/buat profile
         await _checkAndCreateProfile(response.user!);
 
-        // Ambil data role user dari tabel profiles
         final userData = await _supabase
             .from('profiles')
             .select('package_tier')
@@ -76,23 +82,16 @@ class LoginController extends GetxController {
           colorText: Colors.green,
         );
 
-        String roleLower = userRole.toLowerCase();
-
-        if (roleLower == 'speaker') {
-          Get.offAllNamed('/dashboard-speak');
-        } else if (roleLower == 'moderator') {
-          Get.offAllNamed('/dashboard-mod');
-        } else if (roleLower == 'gatekeeper') {
-          Get.offAllNamed('/dashboard-gatekeeper');
-        } else {
-          Get.offAllNamed('/dashboard');
-        }
+        _navigateBasedOnRole(userRole);
       }
     } catch (e) {
       print("Error Google Auth: $e");
       String failMsg = e.toString();
-      if (failMsg.contains("sign_in_failed") || failMsg.contains("12500") || failMsg.contains("10")) {
-        failMsg = "Google Sign-In gagal. Pastikan SHA-1 fingerprint aplikasi Anda telah didaftarkan di Google Cloud Console.";
+      if (failMsg.contains("sign_in_failed") ||
+          failMsg.contains("12500") ||
+          failMsg.contains("10")) {
+        failMsg =
+            "Google Sign-In gagal. Pastikan SHA-1 fingerprint aplikasi Anda telah didaftarkan di Google Cloud Console.";
       }
       Get.snackbar(
         'Gagal',
@@ -127,16 +126,19 @@ class LoginController extends GetxController {
   }
 
   Future<void> loginUser() async {
-    final email = emailC.text.trim();
-    final password = passC.text.trim();
+    // Membaca langsung dari memori statis yang tidak bisa di-reset sembarangan
+    final email = _sharedEmailC.text.trim();
+    final password = _sharedPassC.text.trim();
 
-    // 1. Validasi form kosong
+    print("🟢 MENCOBA LOGIN - Email terbaca: '$email' | Pass terbaca length: ${password.length}");
+
     if (email.isEmpty || password.isEmpty) {
       Get.snackbar(
         "Gagal Masuk",
-        "Email dan Password tidak boleh kosong!",
+        "Email dan Password tidak boleh kosong!\n(Info Debug Terbaca: '$email')",
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
+        snackPosition: SnackPosition.TOP,
       );
       return;
     }
@@ -144,22 +146,18 @@ class LoginController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 2. Autentikasi ke sistem Supabase
       final AuthResponse response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
       if (response.user != null) {
-        // 3. AMBIL DATA ROLE USER DARI TABEL PROFILES
-        // Kita cek user ini jabatannya apa di kolom package_tier
         final userData = await _supabase
             .from('profiles')
             .select('package_tier')
             .eq('id', response.user!.id)
-            .maybeSingle(); // Ambil 1 baris data profil user tersebut
+            .maybeSingle();
 
-        // Jika package_tier kosong, anggap sebagai 'Peserta' atau 'Free'
         String userRole = userData?['package_tier'] ?? 'Peserta';
 
         await AuditLog.record(
@@ -175,32 +173,16 @@ class LoginController extends GetxController {
           snackPosition: SnackPosition.TOP,
         );
 
-        // Bersihkan form
-        emailC.clear();
-        passC.clear();
+        // HANYA BERSIHKAN TEKS JIKA LOGIN SUDAH BENAR-BENAR BERHASIL
+        _sharedEmailC.clear();
+        _sharedPassC.clear();
 
-        // 4. LOGIKA PERCABANGAN HALAMAN (Sesuai kode lama kamu)
-        // Kita ubah teksnya jadi huruf kecil semua biar pencocokan namanya kebal dari typo huruf kapital
-        String roleLower = userRole.toLowerCase();
-
-        if (roleLower == 'speaker') {
-          // Arahkan pemateri ke Dashboard Speaker
-          Get.offAllNamed('/dashboard-speak');
-        } else if (roleLower == 'moderator') {
-          // Arahkan moderator ke Dashboard Moderator
-          Get.offAllNamed('/dashboard-mod');
-        } else if (roleLower == 'gatekeeper') {
-          // Arahkan penjaga gerbang ke Dashboard Gatekeeper
-          Get.offAllNamed('/dashboard-gatekeeper');
-        } else {
-          // Arahkan peserta biasa atau role lain ke Dashboard umum
-          Get.offAllNamed('/dashboard');
-        }
+        _navigateBasedOnRole(userRole);
       }
     } on AuthException catch (e) {
       Get.snackbar(
         "Otentikasi Gagal",
-        "Email atau password salah.",
+        "Email atau password salah. Pastikan sudah terverifikasi.",
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
       );
@@ -216,10 +198,22 @@ class LoginController extends GetxController {
     }
   }
 
+  void _navigateBasedOnRole(String userRole) {
+    String roleLower = userRole.toLowerCase();
+    if (roleLower == 'speaker') {
+      Get.offAllNamed('/dashboard-speak');
+    } else if (roleLower == 'moderator') {
+      Get.offAllNamed('/dashboard-mod');
+    } else if (roleLower == 'gatekeeper') {
+      Get.offAllNamed('/dashboard-gatekeeper');
+    } else {
+      Get.offAllNamed('/dashboard');
+    }
+  }
+
   @override
   void onClose() {
-    emailC.dispose();
-    passC.dispose();
+    // Biarkan kosong tanpa dispose agar memori statis tetap aman
     super.onClose();
   }
 }

@@ -19,21 +19,38 @@ class FaceService {
   /// ===============================
   /// LOAD SEMUA WAJAH DARI DATABASE
   /// ===============================
-  Future<void> loadRegisteredUsers() async {
-    final response = await supabase
-        .from('profiles')
-        .select('id, full_name, face_vector')
-        .not('face_vector', 'is', null);
+  // Di dalam FaceService.dart, perbarui cara load registered users
+Future<void> loadRegisteredUsers() async {
+  final response = await supabase
+      .from('profiles')
+      .select('id, full_name, face_vector')
+      .not('face_vector', 'is', null);
 
-    registeredUsers = List<Map<String, dynamic>>.from(response);
-
-    print("✅ Registered User : ${registeredUsers.length}");
-  }
+  registeredUsers = (response as List).map((user) {
+    List<double> vector;
+    if (user['face_vector'] is String) {
+      vector = (user['face_vector'] as String)
+          .replaceAll('[', '').replaceAll(']', '')
+          .split(',').map((e) => double.parse(e.trim())).toList();
+    } else {
+      vector = (user['face_vector'] as List)
+          .map((e) => (e as num).toDouble()).toList();
+    }
+    
+    // PENTING: Normalisasi saat load agar sama dengan liveVector
+    return {
+      'id': user['id'],
+      'full_name': user['full_name'],
+      'face_vector': SimilarityHelper.normalizeEmbedding(vector) 
+    };
+  }).toList();
+} 
 
   /// ===============================
-  /// VERIFIKASI WAJAH
+  /// VERIFIKASI WAJAH (NO CHANGE LOGIC)
   /// ===============================
   Future<MatchResult?> verifyFace(CameraImage rawImage, Face face) async {
+    
     img.Image? image = ImageHelper.cameraImageToImage(rawImage);
 
     if (image == null) return null;
@@ -41,20 +58,14 @@ class FaceService {
     //--------------------------------
     // Crop wajah
     //--------------------------------
-
     Rect rect = face.boundingBox;
 
     int x = rect.left.toInt().clamp(0, image.width - 1);
     int y = rect.top.toInt().clamp(0, image.height - 1);
     int w = rect.width.toInt().clamp(0, image.width - x);
     int h = rect.height.toInt().clamp(0, image.height - y);
-    print(face.boundingBox);
-
-    print(image.width);
-    print(image.height);
 
     img.Image crop = img.copyCrop(image, x: x, y: y, width: w, height: h);
-    print("${x}, ${y}, ${w}, ${h}");
 
     crop = img.copyResize(
       crop,
@@ -62,93 +73,54 @@ class FaceService {
       height: 112,
       interpolation: img.Interpolation.linear,
     );
-    print("${crop.width} x ${crop.height}");
+
     //--------------------------------
     // Inference
     //--------------------------------
-
     var input = ImageHelper.imageToInput(crop);
     int embeddingSize = interpreter.getOutputTensor(0).shape[1];
 
     var output = List.generate(1, (_) => List.filled(embeddingSize, 0.0));
 
     interpreter.run(input, output);
-    print("Inference selesai");
 
     List<double> liveVector = SimilarityHelper.normalizeEmbedding(output[0]);
+
     //--------------------------------
     // Compare ke database
     //--------------------------------
-
+  
     double bestScore = -1;
-
     String? bestName;
     String? bestId;
+    // Gunakan 0.10 sebagai batas toleransi, 
+    // tapi pastikan di bawah ini kita cek apakah bestScore mencapai threshold
+    const double minThreshold = 0.10; 
 
     for (final user in registeredUsers) {
-      try {
-        List<double> dbVector;
+      List<double> dbVector = user['face_vector'] as List<double>; 
+      double score = SimilarityHelper.cosineSimilarity(liveVector, dbVector);
+      
+      print("${user['full_name']} -> ${score.toStringAsFixed(4)}");
 
-        if (user['face_vector'] is String) {
-          dbVector = (user['face_vector'] as String)
-              .replaceAll('[', '')
-              .replaceAll(']', '')
-              .split(',')
-              .map((e) => double.parse(e.trim()))
-              .toList();
-        } else {
-          dbVector = (user['face_vector'] as List)
-              .map((e) => (e as num).toDouble())
-              .toList();
-        }
+      // 1. Jika sangat mirip (Early Exit)
+      if (score >= 0.85) { 
+        return MatchResult(id: user['id'].toString(), name: user['full_name'], score: score);
+      }
 
-        dbVector = SimilarityHelper.normalizeEmbedding(dbVector);
-        if (dbVector.length != liveVector.length) {
-          continue;
-        }
-
-        double score = SimilarityHelper.cosineSimilarity(liveVector, dbVector);
-        print(liveVector.sublist(0,10));
-
-        print("${user['full_name']} -> ${score.toStringAsFixed(4)}");
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestName = user['full_name'];
-          bestId = user['id'].toString();
-        }
-      } catch (e, s) {
-        print("ERROR USER : ${user['full_name']}");
-        print(e);
-        print(s);
+      // 2. Simpan kandidat jika memenuhi threshold
+      if (score >= minThreshold && score > bestScore) {
+        bestScore = score;
+        bestName = user['full_name'];
+        bestId = user['id'].toString();
       }
     }
-    print("=========== VERIFY ===========");
-    print("Registered : ${registeredUsers.length}");
-    print("----------------------------");
-    print("BEST MATCH : $bestName");
-    print("BEST SCORE : $bestScore");
-    print("----------------------------");
 
-    //--------------------------------
-    // Threshold
-    //--------------------------------
-
-    const threshold = 0.60;
-
-    if (bestScore >= threshold) {
-      return MatchResult(id: bestId!, name: bestName!, score: bestScore);
+    // PENTING: Hanya return jika bestScore memenuhi syarat
+    if (bestId != null && bestScore >= minThreshold) {
+      return MatchResult(id: bestId, name: bestName!, score: bestScore);
     }
-
-    print("----------------------------");
-    print("BEST ID    : $bestId");
-    print("BEST NAME  : $bestName");
-    print("Threshold  : $threshold");
-    print("BEST SCORE : $bestScore");
-    print("----------------------------");
-
+    
+    // Jika tidak ada yang memenuhi threshold, kembalikan null
     return null;
-  }
-
-}
-
+    }}

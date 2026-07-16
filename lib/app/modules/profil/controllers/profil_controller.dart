@@ -68,40 +68,114 @@ class ProfilController extends GetxController {
 
   // ================= --- FUNGSI TOMBOL VERIFIKASI WAJAH --- =================
   void handleFaceVerification() {
-    if (isFaceVerified.value) {
-      // Jika sudah diverifikasi, munculkan pop-up opsi
-      Get.defaultDialog(
-        title: "Sudah Terverifikasi",
-        middleText:
-            "Wajah Anda sudah terdaftar di sistem dan siap digunakan untuk Check-in Event.\n\nApakah Anda ingin memperbarui (scan ulang) data wajah Anda?",
-        titleStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.green,
+  if (isFaceVerified.value) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        buttonColor: const Color(0xFF00dbe7),
-        textConfirm: "Scan Ulang",
-        confirmTextColor: Colors.black,
-        textCancel: "Tutup",
-        onConfirm: () {
-          Get.back(); // Tutup dialog dulu
-          // Arahkan ke kamera, dan saat KEMBALI dari kamera, jalankan fetchProfile()
-          Get.toNamed('/scan-page', arguments: {'from_profile': true})?.then((
-            _,
-          ) {
-            fetchProfileFromSupabase(); // REFRESH DATA!
-          });
-        },
-      );
-    } else {
-      // Jika belum verifikasi, langsung lempar ke halaman Face Scanner
-      // .then() memastikan saat user klik "Lanjutkan" di halaman scan dan kembali ke profil,
-      // profil akan otomatis me-refresh database untuk ngecek vektor barunya.
-      Get.toNamed('/scan-page', arguments: {'from_profile': true})?.then((_) {
-        fetchProfileFromSupabase(); // REFRESH DATA!
-      });
-    }
-  }
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.verified_rounded,
+                  color: Colors.green,
+                  size: 40,
+                ),
+              ),
 
+              const SizedBox(height: 20),
+
+              const Text(
+                "Face Verification",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                "Wajah Anda sudah berhasil terverifikasi dan siap digunakan untuk proses Check-in Event.\n\nApakah Anda ingin melakukan scan ulang untuk memperbarui data wajah?",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () {
+                        Get.back();
+                      },
+                      child: const Text("Tutup"),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00DBE7),
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(0, 50),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text("Scan Ulang"),
+                      onPressed: () {
+                        Get.back();
+
+                        Get.toNamed(
+                          '/scan-page',
+                          arguments: {'from_profile': true},
+                        )?.then((_) {
+                          fetchProfileFromSupabase();
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  } else {
+    Get.toNamed(
+      '/scan-page',
+      arguments: {'from_profile': true},
+    )?.then((_) {
+      fetchProfileFromSupabase();
+    });
+  }
+}
   // ================= 2. UPLOAD FOTO PROFIL =================
   Future<void> pickAndUploadImage() async {
     Get.back();

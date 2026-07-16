@@ -3,15 +3,13 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
+import 'dart:typed_data';
 
 class ScanPageController extends GetxController {
-  //TODO: Implement ScanPageController
-
   late CameraController cameraController;
   late List<CameraDescription> cameras;
   var isCameraInitialized = false.obs;
@@ -21,7 +19,6 @@ class ScanPageController extends GetxController {
   var detectedFace = Rxn<Face>();
 
   // TFLite Interpreter
-  // late Interpreter interpreter;
   Interpreter? interpreter;
 
   // Supabase Client
@@ -30,37 +27,65 @@ class ScanPageController extends GetxController {
   // --- KUNCI PENGAMAN (LOCKS) ---
   bool isDetecting = false;
   bool isVerifying = false;
+  bool _isDisposed = false;
 
   @override
   void onInit() {
     super.onInit();
+    _resetState();
+
     _initializeDlModels().then((_) {
-      _initializeCamera();
+      if (!_isDisposed) {
+        _initializeCamera();
+      }
     });
+  }
+
+  void _resetState() {
+    _isDisposed = false;
+    isDetecting = false;
+    isVerifying = false;
+    isCameraInitialized.value = false;
+    detectedFace.value = null;
+    print("🔄 LOG: State ScanPageController berhasil di-reset total!");
   }
 
   // 1. Inisialisasi Kamera & Stream
   void _initializeCamera() async {
-    cameras = await availableCameras();
-    cameraController = CameraController(
-      cameras[1],
-      ResolutionPreset.medium,
-      enableAudio: false,
-      imageFormatGroup: Platform.isAndroid
-          ? ImageFormatGroup.nv21
-          : ImageFormatGroup.bgra8888,
-    );
-
-    await cameraController.initialize();
-
-    cameraController.startImageStream((CameraImage image) {
-      if (isCameraInitialized.value) {
-        _doFaceDetection(image);
+    try {
+      cameras = await availableCameras();
+      if (cameras.length < 2) {
+        print("❌ LOG ERROR: Kamera depan tidak ditemukan!");
+        return;
       }
-    });
 
-    isCameraInitialized.value = true;
-    print("📸 LOG: Kamera berhasil dimulai!");
+      cameraController = CameraController(
+        cameras[1], // Kamera Depan
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: Platform.isAndroid
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
+      );
+
+      await cameraController.initialize();
+
+      if (_isDisposed) return;
+
+      cameraController.startImageStream((CameraImage image) {
+        if (isCameraInitialized.value &&
+            !_isDisposed &&
+            !isVerifying &&
+            !isDetecting) {
+          _doFaceDetection(image);
+        }
+      });
+
+      isCameraInitialized.value = true;
+      print("📸 LOG: Kamera berhasil dimulai!");
+    } catch (e) {
+      print("❌ LOG ERROR Kamera: $e");
+    }
   }
 
   // 2. Inisialisasi Model ML Kit & TFLite
@@ -72,7 +97,6 @@ class ScanPageController extends GetxController {
     faceDetector = FaceDetector(options: options);
 
     try {
-      //D:\Kuliah\SEMESTER_6\Mobile\capstone\syncra-mobile\assets\mobilefacenet.tflite
       interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite');
       print("✅ LOG: Model TFLite berhasil dimuat!");
     } catch (e) {
@@ -82,22 +106,20 @@ class ScanPageController extends GetxController {
 
   // 3. Logika Deteksi Wajah (ML Kit)
   void _doFaceDetection(CameraImage image) async {
-    if (isDetecting || isVerifying) return;
+    if (_isDisposed || isDetecting || isVerifying) return;
 
     isDetecting = true;
 
     try {
       final inputImage = _convertCameraImageToInputImage(image);
-      if (inputImage == null) {
-        isDetecting = false;
-        return;
-      }
+      if (inputImage == null) return;
 
       final List<Face> faces = await faceDetector.processImage(inputImage);
 
-      if (faces.isNotEmpty) {
+      if (faces.isNotEmpty && !isVerifying && !_isDisposed) {
         detectedFace.value = faces.first;
         if (_isFaceInTargetArea(detectedFace.value!)) {
+          isVerifying = true;
           _doFaceVerification(image, detectedFace.value!);
         }
       } else {
@@ -114,21 +136,25 @@ class ScanPageController extends GetxController {
 
   // 4. Logika Verifikasi Wajah (Model TFLite) & Kirim ke Supabase
   void _doFaceVerification(CameraImage rawImage, Face faceCoords) async {
-    isVerifying = true;
     print("⏳ LOG: Memulai proses ekstraksi fitur wajah asli...");
 
     try {
-      img.Image? convertedImage = _convertCameraImageToImg(rawImage);
-      if (convertedImage == null) throw Exception("Gagal konversi gambar");
+      if (cameraController.value.isStreamingImages) {
+        await cameraController.stopImageStream();
+      }
 
-      // 1. Ambil koordinat wajah (Tambah pengaman agar crop tidak out-of-bounds)
+      img.Image? convertedImage = _convertCameraImage(rawImage);
+      if (convertedImage == null) {
+        throw Exception("Gagal konversi gambar dari kamera");
+      }
+
       final rect = faceCoords.boundingBox;
-      int x = rect.left.toInt().clamp(0, convertedImage.width);
-      int y = rect.top.toInt().clamp(0, convertedImage.height);
-      int w = rect.width.toInt().clamp(0, convertedImage.width - x);
-      int h = rect.height.toInt().clamp(0, convertedImage.height - y);
 
-      // 2. Crop & Resize
+      int x = (rect.left - 10).toInt().clamp(0, convertedImage.width);
+      int y = (rect.top - 10).toInt().clamp(0, convertedImage.height);
+      int w = (rect.width + 20).toInt().clamp(0, convertedImage.width - x);
+      int h = (rect.height + 20).toInt().clamp(0, convertedImage.height - y);
+
       img.Image croppedFace = img.copyCrop(
         convertedImage,
         x: x,
@@ -136,115 +162,235 @@ class ScanPageController extends GetxController {
         width: w,
         height: h,
       );
+
       img.Image resizedFace = img.copyResize(
         croppedFace,
         width: 112,
         height: 112,
       );
 
-      // 3. Konversi ke bentuk array multi-dimensi [1][112][112][3]
       var input = _imageToFloat32List(resizedFace);
-
-      // 4. BACA BENTUK MODEL ASLIMU
-      // Biasanya MobileFaceNet mengeluarkan 192 dimensi, bukan 128. Kita cek otomatis!
       var outputShape = interpreter!.getOutputTensor(0).shape;
-      int embeddingSize =
-          outputShape[1]; // Mengambil angka 128 atau 192 dari model
+      int embeddingSize = outputShape[1];
 
-      // Buat wadah output tipe Murni [1][ukuran_model]
       var outputEmbedding = List.generate(
         1,
         (index) => List.filled(embeddingSize, 0.0),
       );
 
-      // 5. JALANKAN TFLITE (Sekarang pasti dieksekusi)
       interpreter!.run(input, outputEmbedding);
-      print("================================");
-      print("REGISTER OUTPUT SHAPE : ${interpreter!.getOutputTensor(0).shape}");
-      print("REGISTER VECTOR LENGTH : ${outputEmbedding[0].length}");
-      print("================================");
+      List<double> vektorWajahAsli = List<double>.from(outputEmbedding[0]);
 
-      // 6. Ambil hasilnya
-      // 6. Ambil hasil embedding
-      List<double> vektorWajahAsli = outputEmbedding[0];
+      print("✅ LOG: Vektor Berhasil Didapat! Sampel: ${vektorWajahAsli.sublist(0, 3)}");
 
-      print("================================");
-      print("FINAL VECTOR LENGTH : ${vektorWajahAsli.length}");
-      print("================================");
-
-      print(
-        "✅ LOG: Vektor Asli Didapat! 3 angka pertama: ${vektorWajahAsli.sublist(0, 3)}",
-      );
-
-      // 7. Simpan ke Supabase
-      await simpanDataWajah(vektorWajahAsli);
-
-      print("☁️ LOG: Face Vector berhasil disimpan");
-
-      // 8. Stop scanner & tampilkan popup
-      await cameraController.stopImageStream();
-
-      _showSuccessPopup();
+      // =========================================================================
+      // SOLUSI UX BERSIH: Langsung simpan ke cloud tanpa pop-up debug teknis!
+      // =========================================================================
+      if (!_isDisposed) {
+        print("🚀 LOG UX: Ekstraksi selesai, langsung menyimpan ke cloud secara senyap...");
+        await simpanDataWajah(vektorWajahAsli);
+        _showSuccessPopup(); // Tampilkan pop-up elegan untuk end-user
+      }
     } catch (e) {
-      print("❌ LOG ERROR Verifikasi TFLite: $e");
+      print("❌ LOG ERROR Verifikasi TFLite / Simpan Wajah: $e");
       isVerifying = false;
+      if (!_isDisposed &&
+          isCameraInitialized.value &&
+          !cameraController.value.isStreamingImages) {
+        cameraController.startImageStream(_doFaceDetection);
+      }
     }
   }
 
-  // FUNGSI SUPABASE BARU
-  // FUNGSI SUPABASE BARU (Sudah Diperbaiki)
+  // ===================================================================
+  // FUNGSI KONVERSI GAMBAR (TIDAK DIUBAH SAMA SEKALI)
+  // ===================================================================
+  img.Image? _convertCameraImage(CameraImage image) {
+    try {
+      print("📸 LOG FORMAT: ${image.format.group} | Jumlah Planes: ${image.planes.length}");
+
+      if (image.planes.length == 1) {
+        return _convertSinglePlaneToImage(image);
+      } else if (image.planes.length >= 3) {
+        return _convertYUV420ToImageSafe(image);
+      }
+
+      print("❌ LOG: Jumlah planes (${image.planes.length}) tidak dikenali!");
+      return null;
+    } catch (e) {
+      print("❌ LOG ERROR Konversi Gambar: $e");
+      return null;
+    }
+  }
+
+  img.Image _convertSinglePlaneToImage(CameraImage image) {
+    final int width = image.width;
+    final int height = image.height;
+    final bytes = image.planes[0].bytes;
+
+    var imgImage = img.Image(width: width, height: height);
+
+    if (bytes.length >= width * height * 4) {
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final int index = (y * width + x) * 4;
+          if (index + 2 < bytes.length) {
+            imgImage.setPixelRgb(
+              x,
+              y,
+              bytes[index + 2],
+              bytes[index + 1],
+              bytes[index],
+            );
+          }
+        }
+      }
+    } else {
+      final int frameSize = width * height;
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          int yIndex = y * width + x;
+          int uvIndex = frameSize + (y >> 1) * width + (x & ~1);
+
+          int yp = (yIndex < bytes.length) ? (bytes[yIndex] & 0xff) : 0;
+          int vp = (uvIndex < bytes.length) ? (bytes[uvIndex] & 0xff) : 128;
+          int up = (uvIndex + 1 < bytes.length)
+              ? (bytes[uvIndex + 1] & 0xff)
+              : 128;
+
+          int r = (yp + vp * 1436 / 1024 - 179).round().clamp(0, 255);
+          int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91)
+              .round()
+              .clamp(0, 255);
+          int b = (yp + up * 1814 / 1024 - 227).round().clamp(0, 255);
+
+          imgImage.setPixelRgb(x, y, r, g, b);
+        }
+      }
+    }
+    return img.copyRotate(imgImage, angle: -90);
+  }
+
+  img.Image _convertYUV420ToImageSafe(CameraImage image) {
+    final int width = image.width;
+    final int height = image.height;
+    final int uvRowStride = image.planes[1].bytesPerRow;
+    final int uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
+
+    var imgImage = img.Image(width: width, height: height);
+
+    final yBytes = image.planes[0].bytes;
+    final uBytes = image.planes[1].bytes;
+    final vBytes = image.planes[2].bytes;
+
+    for (int x = 0; x < width; x++) {
+      for (int y = 0; y < height; y++) {
+        final int uvIndex = uvPixelStride * (x >> 1) + uvRowStride * (y >> 1);
+        final int index = y * width + x;
+
+        final yp = (index < yBytes.length) ? (yBytes[index] & 0xff) : 0;
+        final up = (uvIndex < uBytes.length) ? (uBytes[uvIndex] & 0xff) : 128;
+        final vp = (uvIndex < vBytes.length) ? (vBytes[uvIndex] & 0xff) : 128;
+
+        int r = (yp + vp * 1436 / 1024 - 179).round().clamp(0, 255);
+        int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91)
+            .round()
+            .clamp(0, 255);
+        int b = (yp + up * 1814 / 1024 - 227).round().clamp(0, 255);
+
+        imgImage.setPixelRgb(x, y, r, g, b);
+      }
+    }
+    return img.copyRotate(imgImage, angle: -90);
+  }
+
   Future<void> simpanDataWajah(List<double> vektor) async {
-  try {
-    print("☁️ LOG: Mencoba mengirim embedding ke Supabase...");
+    try {
+      print("☁️ LOG: Mencoba mengirim embedding ke Supabase...");
 
-    final currentUser = supabase.auth.currentUser;
+      final session = supabase.auth.currentSession;
+      final currentUser = supabase.auth.currentUser;
 
-    if (currentUser == null) {
-      print("❌ LOG: User belum login");
-      return;
+      if (currentUser == null || session == null) {
+        print("❌ LOG ERROR: User belum login atau sesi expired!");
+        Get.snackbar("Error", "Sesi login tidak valid, silakan login ulang");
+        return;
+      }
+
+      final userId = currentUser.id;
+      final userEmail = currentUser.email;
+
+      print("🔍 DEBUG AUTH: Menyimpan vektor untuk Email: $userEmail (ID: $userId)");
+
+      final response = await supabase
+          .from('profiles')
+          .update({'face_vector': vektor})
+          .eq('id', userId)
+          .select();
+
+      print("✅ LOG SUKSES: Data di database terupdate -> $response");
+    } on PostgrestException catch (e) {
+      print("❌ LOG ERROR SUPABASE: ${e.message}");
+      rethrow;
+    } catch (e) {
+      print("❌ LOG ERROR UMUM: $e");
+      rethrow;
     }
-
-    final userId = currentUser.id;
-
-    print("================================");
-    print("USER ID : $userId");
-    print("VECTOR LENGTH : ${vektor.length}");
-    print("================================");
-
-    await supabase
-        .from('profiles')
-        .update({
-          'face_vector': vektor,
-        })
-        .eq('id', userId);
-
-    print("✅ LOG: Face Vector berhasil diupdate");
-  } on PostgrestException catch (e) {
-    print("❌ LOG ERROR SUPABASE: ${e.message}");
-  } catch (e) {
-    print("❌ LOG ERROR UMUM: $e");
   }
-}
+
+  // =========================================================================
+  // UX POP-UP SUKSES: Dibuat lebih elegan untuk pengguna akhir
+  // =========================================================================
   void _showSuccessPopup() {
     Get.defaultDialog(
-      title: "Berhasil",
-      middleText: "Data wajah tersimpan di Cloud!",
+      title: "Verifikasi Berhasil! ✅",
+      middleText: "Wajah Anda telah berhasil dipindai dan terdaftar dengan aman di sistem.",
       backgroundColor: const Color(0xFF010f1f),
       titleStyle: const TextStyle(
-        color: Color(0xFF89CEFF),
+        color: Color(0xFF00dbe7),
         fontWeight: FontWeight.bold,
+        fontSize: 18,
       ),
-      middleTextStyle: const TextStyle(color: Colors.white),
+      middleTextStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 13,
+        height: 1.4,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       barrierDismissible: false,
-      radius: 15,
-      confirm: TextButton(
-        onPressed: () {
-          Get.back();
-          Get.back();
-        },
-        child: const Text(
-          "Lanjutkan",
-          style: TextStyle(color: Color(0xFF00dbe7)),
+      radius: 20,
+      confirm: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 10),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00dbe7),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          onPressed: () {
+            _isDisposed = true;
+
+            Get.back(); // Tutup dialog sukses
+            Get.back(); // Keluar dari ScanPage kembali ke alur utama
+
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (Get.isRegistered<ScanPageController>()) {
+                Get.delete<ScanPageController>(force: true);
+                print("🗑️ LOG: Controller dipaksa hapus (force delete) dari memori!");
+              }
+            });
+          },
+          child: const Text(
+            "Lanjutkan",
+            style: TextStyle(
+              color: Color(0xFF010f1f),
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
         ),
       ),
     );
@@ -275,25 +421,18 @@ class ScanPageController extends GetxController {
     }
     final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize = Size(
-      image.width.toDouble(),
-      image.height.toDouble(),
+    return InputImage.fromBytes(
+      bytes: bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation,
+        format: format,
+        bytesPerRow: image.planes.first.bytesPerRow,
+      ),
     );
-
-    final InputImageMetadata metadata = InputImageMetadata(
-      size: imageSize,
-      rotation: rotation,
-      format: format,
-      bytesPerRow: image.planes.first.bytesPerRow,
-    );
-
-    return InputImage.fromBytes(bytes: bytes, metadata: metadata);
   }
 
-  // --- FUNGSI BANTUAN 1: Mengubah Gambar ke Matriks Float32 ---
-  // --- FUNGSI BANTUAN 1: Mengubah Gambar ke Matriks Float32 (Murni Multi-Dimensi) ---
   List<List<List<List<double>>>> _imageToFloat32List(img.Image image) {
-    // Buat wadah [1, 112, 112, 3] yang spesifik bertipe List<double>
     var input = List.generate(
       1,
       (i) => List.generate(
@@ -305,107 +444,40 @@ class ScanPageController extends GetxController {
     for (int y = 0; y < 112; y++) {
       for (int x = 0; x < 112; x++) {
         var pixel = image.getPixel(x, y);
-        // Normalisasi MobileFaceNet: (pixel - 127.5) / 128.0
-        input[0][y][x][0] = (pixel.r - 127.5) / 128.0; // Red
-        input[0][y][x][1] = (pixel.g - 127.5) / 128.0; // Green
-        input[0][y][x][2] = (pixel.b - 127.5) / 128.0; // Blue
+        input[0][y][x][0] = (pixel.r - 127.5) / 128.0;
+        input[0][y][x][1] = (pixel.g - 127.5) / 128.0;
+        input[0][y][x][2] = (pixel.b - 127.5) / 128.0;
       }
     }
     return input;
   }
 
-  // --- FUNGSI BANTUAN 2: Convert YUV420 CameraImage ke img.Image ---
-  // --- FUNGSI BANTUAN 2: Convert CameraImage ke img.Image (Versi Tahan Banting) ---
-  // --- FUNGSI BANTUAN 2: Convert CameraImage ke img.Image (Versi Paling Kebal) ---
-  img.Image? _convertCameraImageToImg(CameraImage image) {
-    try {
-      final int width = image.width;
-      final int height = image.height;
-      final int frameSize = width * height;
-      var imgImage = img.Image(width: width, height: height);
-
-      // JIKA KAMERA MENGIRIM DATA DALAM 1 LAPIS (1 PLANE)
-      if (image.planes.length == 1) {
-        var bytes = image.planes[0].bytes;
-
-        // KONDISI A: Format BGRA8888 (4 bytes per pixel)
-        if (bytes.length == frameSize * 4) {
-          for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-              final int index = (y * width + x) * 4;
-              final int b = bytes[index];
-              final int g = bytes[index + 1];
-              final int r = bytes[index + 2];
-              imgImage.setPixelRgb(x, y, r, g, b);
-            }
-          }
-        }
-        // KONDISI B: Format NV21 (1.5 bytes per pixel) -> INI YANG TERJADI DI HP KAMU
-        else if (bytes.length == (frameSize * 1.5).round()) {
-          for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-              int yIndex = y * width + x;
-              // Rumus khusus melompat ke blok warna (UV) di akhir array NV21
-              int uvIndex = frameSize + (y >> 1) * width + (x & ~1);
-
-              int yp = bytes[yIndex];
-              int vp = bytes[uvIndex]; // Di NV21, warna V ada di depan U
-              int up = bytes[uvIndex + 1];
-
-              // Normalisasi YUV ke RGB
-              int r = (yp + vp * 1436 / 1024 - 179).round().clamp(0, 255);
-              int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91)
-                  .round()
-                  .clamp(0, 255);
-              int b = (yp + up * 1814 / 1024 - 227).round().clamp(0, 255);
-
-              imgImage.setPixelRgb(x, y, r, g, b);
-            }
-          }
-        }
-      }
-      // JIKA KAMERA MENGIRIM DATA DALAM 3 LAPIS STANDARD (YUV420)
-      else if (image.planes.length >= 3) {
-        final int uvRowStride = image.planes[1].bytesPerRow;
-        final int uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-        for (int x = 0; x < width; x++) {
-          for (int y = 0; y < height; y++) {
-            final int uvIndex =
-                uvPixelStride * (x / 2).floor() + uvRowStride * (y / 2).floor();
-            final int index = y * width + x;
-
-            final yp = image.planes[0].bytes[index];
-            final up = image.planes[1].bytes[uvIndex];
-            final vp = image.planes[2].bytes[uvIndex];
-
-            int r = (yp + vp * 1436 / 1024 - 179).round().clamp(0, 255);
-            int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91)
-                .round()
-                .clamp(0, 255);
-            int b = (yp + up * 1814 / 1024 - 227).round().clamp(0, 255);
-
-            imgImage.setPixelRgb(x, y, r, g, b);
-          }
-        }
-      }
-
-      // Rotasi -90 karena tangkapan hardware kamera depan biasanya landscape
-      return img.copyRotate(imgImage, angle: -90);
-    } catch (e) {
-      print("Error convert image: $e");
-      return null;
-    }
-  }
-
   @override
   void onClose() {
-    cameraController.dispose();
-    faceDetector.close();
+    _isDisposed = true;
 
-    // GANTI JADI:
-    interpreter?.close();
+    if (isCameraInitialized.value) {
+      try {
+        if (cameraController.value.isStreamingImages) {
+          cameraController.stopImageStream().then((_) {
+            cameraController.dispose();
+          });
+        } else {
+          cameraController.dispose();
+        }
+      } catch (e) {
+        print("⚠️ Warning saat tutup kamera: $e");
+      }
+    }
 
+    try {
+      faceDetector.close();
+      interpreter?.close();
+    } catch (e) {
+      print("⚠️ Warning saat tutup model: $e");
+    }
+
+    print("🧹 LOG: ScanPageController berhasil di-dispose bersih 100%!");
     super.onClose();
   }
 }

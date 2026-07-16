@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import 'package:tranlator_v1/app/modules/user/scan_page/views/scanner_overlay.dart';
-
-import '../controllers/scan_page_controller.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import '../controllers/scan_page_controller.dart';
 import 'scanner_overlay.dart'; 
 
 class ScanPageView extends GetView<ScanPageController> {
   const ScanPageView({super.key});
+
   @override
   Widget build(BuildContext context) {
      return Scaffold(
@@ -35,7 +31,7 @@ class ScanPageView extends GetView<ScanPageController> {
           IconButton(
             icon: const Icon(Icons.flash_on, color: Color(0xFF89CEFF)),
             onPressed: () {
-              // Logika nyalakan flash nanti bisa ditambahkan di sini
+              // Logika nyalakan flash opsional
             },
           ),
         ],
@@ -51,7 +47,7 @@ class ScanPageView extends GetView<ScanPageController> {
 
         return Stack(
           children: [
-            // 1. Kamera Proporsional di Background (Tanpa gambar sirkuit)
+            // 1. Kamera Proporsional di Background
             Center(
               child: AspectRatio(
                 aspectRatio: 1 / cameraRatio,
@@ -92,7 +88,7 @@ class ScanPageView extends GetView<ScanPageController> {
                         "Scanning in progress...",
                         style: TextStyle(
                           color: Color(0xFF00dbe7),
-                          fontFamily: 'JetBrains Mono', // Sesuai design.md kamu
+                          fontFamily: 'JetBrains Mono',
                           fontSize: 14,
                           letterSpacing: 1.2,
                         ),
@@ -114,6 +110,5 @@ class ScanPageView extends GetView<ScanPageController> {
         );
       }),
     );
- 
   }
 }

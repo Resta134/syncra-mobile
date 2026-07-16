@@ -17,7 +17,7 @@ class FaceregistrationController extends GetxController {
 
   void goToRegrestration() {
     // Pindah ke halaman scan muka, sambil bawa data event-nya
-    Get.toNamed('/facescanner', arguments: eventData);
+    Get.toNamed('/scan-page', arguments: eventData);
   }
 
   void goToTicket() {

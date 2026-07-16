@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tranlator_v1/app/modules/auth/login/controllers/login_controller.dart';
 
 class VerifyOtpController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -48,7 +49,7 @@ class VerifyOtpController extends GetxController {
       );
 
       if (response.session != null) {
-        // 2. Jika sukses, simpan data profilnya ke tabel profiles
+        // 2. Simpan data profil ke tabel profiles
         await _supabase.from('profiles').insert({
           'id': userId,
           'full_name': name,
@@ -57,7 +58,6 @@ class VerifyOtpController extends GetxController {
         });
 
         // 3. KELUARKAN SESI OTOMATIS (Sign Out)
-        // Agar pengguna benar-benar berstatus "belum login" saat dilempar ke halaman Login
         await _supabase.auth.signOut();
 
         Get.snackbar(
@@ -65,12 +65,16 @@ class VerifyOtpController extends GetxController {
           "Akun Anda telah aktif. Silakan masuk menggunakan email dan password Anda.",
           backgroundColor: Colors.green.withOpacity(0.1),
           colorText: Colors.green,
-          snackPosition:
-              SnackPosition.TOP, // Muncul di atas agar lebih terlihat
+          snackPosition: SnackPosition.TOP,
           duration: const Duration(seconds: 4),
         );
 
-        // 4. ARAHKAN KE HALAMAN LOGIN
+        // 4. SOLUSI ANTI-GANDA: Hapus total LoginController jika masih ada di RAM
+        if (Get.isRegistered<LoginController>()) {
+          Get.delete<LoginController>(force: true);
+        }
+
+        // Navigasi bersih ke halaman login
         Get.offAllNamed('/login');
       }
     } on AuthException catch (e) {

@@ -83,7 +83,7 @@ class NotifikasiView extends GetView<NotifikasiController> {
                 message: notif['message']!,
                 time: notif['time']!,
                 buttonText: notif['button_text']!,
-                onTap: () => controller.onNotificationTap(notif['type']!),
+                onTap: () => controller.onNotificationTap(notif),
               );
             },
           ),
