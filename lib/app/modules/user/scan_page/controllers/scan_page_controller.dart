@@ -163,13 +163,14 @@ class ScanPageController extends GetxController {
         height: h,
       );
 
-      img.Image resizedFace = img.copyResize(
+      croppedFace = img.copyResize(
         croppedFace,
         width: 112,
         height: 112,
+        interpolation: img.Interpolation.linear,
       );
 
-      var input = _imageToFloat32List(resizedFace);
+      var input = _imageToFloat32List(croppedFace);
       var outputShape = interpreter!.getOutputTensor(0).shape;
       int embeddingSize = outputShape[1];
 
@@ -180,14 +181,22 @@ class ScanPageController extends GetxController {
 
       interpreter!.run(input, outputEmbedding);
       List<double> vektorWajahAsli = List<double>.from(outputEmbedding[0]);
+      print(vektorWajahAsli.take(10).toList());
+      print(interpreter!.getOutputTensor(0).shape);
+      print(croppedFace.width);
+      print(croppedFace.height);
 
-      print("✅ LOG: Vektor Berhasil Didapat! Sampel: ${vektorWajahAsli.sublist(0, 3)}");
+      print(
+        "✅ LOG: Vektor Berhasil Didapat! Sampel: ${vektorWajahAsli.sublist(0, 3)}",
+      );
 
       // =========================================================================
       // SOLUSI UX BERSIH: Langsung simpan ke cloud tanpa pop-up debug teknis!
       // =========================================================================
       if (!_isDisposed) {
-        print("🚀 LOG UX: Ekstraksi selesai, langsung menyimpan ke cloud secara senyap...");
+        print(
+          "🚀 LOG UX: Ekstraksi selesai, langsung menyimpan ke cloud secara senyap...",
+        );
         await simpanDataWajah(vektorWajahAsli);
         _showSuccessPopup(); // Tampilkan pop-up elegan untuk end-user
       }
@@ -207,7 +216,9 @@ class ScanPageController extends GetxController {
   // ===================================================================
   img.Image? _convertCameraImage(CameraImage image) {
     try {
-      print("📸 LOG FORMAT: ${image.format.group} | Jumlah Planes: ${image.planes.length}");
+      print(
+        "📸 LOG FORMAT: ${image.format.group} | Jumlah Planes: ${image.planes.length}",
+      );
 
       if (image.planes.length == 1) {
         return _convertSinglePlaneToImage(image);
@@ -320,7 +331,9 @@ class ScanPageController extends GetxController {
       final userId = currentUser.id;
       final userEmail = currentUser.email;
 
-      print("🔍 DEBUG AUTH: Menyimpan vektor untuk Email: $userEmail (ID: $userId)");
+      print(
+        "🔍 DEBUG AUTH: Menyimpan vektor untuk Email: $userEmail (ID: $userId)",
+      );
 
       final response = await supabase
           .from('profiles')
@@ -344,7 +357,8 @@ class ScanPageController extends GetxController {
   void _showSuccessPopup() {
     Get.defaultDialog(
       title: "Verifikasi Berhasil! ✅",
-      middleText: "Wajah Anda telah berhasil dipindai dan terdaftar dengan aman di sistem.",
+      middleText:
+          "Wajah Anda telah berhasil dipindai dan terdaftar dengan aman di sistem.",
       backgroundColor: const Color(0xFF010f1f),
       titleStyle: const TextStyle(
         color: Color(0xFF00dbe7),
@@ -379,7 +393,9 @@ class ScanPageController extends GetxController {
             Future.delayed(const Duration(milliseconds: 300), () {
               if (Get.isRegistered<ScanPageController>()) {
                 Get.delete<ScanPageController>(force: true);
-                print("🗑️ LOG: Controller dipaksa hapus (force delete) dari memori!");
+                print(
+                  "🗑️ LOG: Controller dipaksa hapus (force delete) dari memori!",
+                );
               }
             });
           },
@@ -444,9 +460,9 @@ class ScanPageController extends GetxController {
     for (int y = 0; y < 112; y++) {
       for (int x = 0; x < 112; x++) {
         var pixel = image.getPixel(x, y);
-        input[0][y][x][0] = (pixel.r - 127.5) / 128.0;
-        input[0][y][x][1] = (pixel.g - 127.5) / 128.0;
-        input[0][y][x][2] = (pixel.b - 127.5) / 128.0;
+        input[0][y][x][0] = (pixel.r - 127.5) / 127.5;
+        input[0][y][x][1] = (pixel.g - 127.5) / 127.5;
+        input[0][y][x][2] = (pixel.b - 127.5) / 127.5;
       }
     }
     return input;

@@ -43,8 +43,6 @@ import '../modules/user/events/bindings/events_binding.dart';
 import '../modules/user/events/views/events_view.dart';
 import '../modules/user/faceregistration/bindings/faceregistration_binding.dart';
 import '../modules/user/faceregistration/views/faceregistration_view.dart';
-import '../modules/user/facescanner/bindings/facescanner_binding.dart';
-import '../modules/user/facescanner/views/facescanner_view.dart';
 import '../modules/user/history/bindings/history_binding.dart';
 import '../modules/user/history/views/history_view.dart';
 import '../modules/user/live/bindings/live_binding.dart';
@@ -175,18 +173,7 @@ class AppPages {
       page: () => const FaceregistrationView(),
       binding: FaceregistrationBinding(),
     ),
-    GetPage(
-      name: _Paths.FACESCANNER,
-      page: () => const FaceScannerView(),
-      binding: FacescannerBinding(),
-      children: [
-        GetPage(
-          name: _Paths.FACESCANNER,
-          page: () => const FaceScannerView(),
-          binding: FacescannerBinding(),
-        ),
-      ],
-    ),
+    
     GetPage(
       name: _Paths.AUTH_SPLASH,
       page: () => const SplashView(),

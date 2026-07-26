@@ -5,7 +5,7 @@ import 'package:tranlator_v1/app/components/custom_bottom_nav.dart';
 import '../controllers/ticket_controller.dart';
 
 class TicketView extends GetView<TicketController> {
-  const TicketView({super.key});
+const TicketView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class TicketView extends GetView<TicketController> {
         elevation: 0,
         backgroundColor: Colors.white,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Tiket Saya',
           style: TextStyle(
             color: Color(0xFF1E293B),
@@ -30,7 +30,7 @@ class TicketView extends GetView<TicketController> {
       body: Obx(() {
         // 1. Tampilan Loading
         if (controller.isLoading.value) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: Colors.blueAccent),
           );
         }
@@ -47,7 +47,7 @@ class TicketView extends GetView<TicketController> {
                   size: 80,
                   color: Colors.grey[300],
                 ),
-                const SizedBox(height: 15),
+                SizedBox(height: 15),
                 Text(
                   "Belum ada tiket",
                   style: TextStyle(
@@ -56,7 +56,7 @@ class TicketView extends GetView<TicketController> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   "Tiket yang kamu beli akan muncul di sini.",
                   style: TextStyle(color: Colors.grey[400], fontSize: 13),
@@ -68,9 +68,9 @@ class TicketView extends GetView<TicketController> {
 
         // 3. Tampilan Jika Ada Tiket
         return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: 20.0,
               vertical: 20.0,
             ),
@@ -81,18 +81,18 @@ class TicketView extends GetView<TicketController> {
                 // LOOPING TIKET UPCOMING (AKTIF)
                 // ==========================================
                 if (controller.upcomingTickets.isNotEmpty) ...[
-                  const Text(
-                    "Tiket Aktif",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
+                  // Text(
+                  //   "Tiket Aktif",
+                  //   style: TextStyle(
+                  //     fontSize: 16,
+                  //     fontWeight: FontWeight.bold,
+                  //     color: Color(0xFF1E293B),
+                  //   ),
+                  // ),
+                  SizedBox(height: 15),
                   ...controller.upcomingTickets.map((ticket) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
+                      padding: EdgeInsets.only(bottom: 20.0),
                       child: _buildTicketCard(
                         context,
                         eventId: ticket['event_id'],
@@ -111,8 +111,8 @@ class TicketView extends GetView<TicketController> {
                 // LOOPING TIKET COMPLETED (SELESAI)
                 // ==========================================
                 if (controller.completedTickets.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  const Text(
+                  SizedBox(height: 10),
+                  Text(
                     "Riwayat Acara",
                     style: TextStyle(
                       fontSize: 16,
@@ -120,10 +120,10 @@ class TicketView extends GetView<TicketController> {
                       color: Color(0xFF1E293B),
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  SizedBox(height: 15),
                   ...controller.completedTickets.map((ticket) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
+                      padding: EdgeInsets.only(bottom: 20.0),
                       child: _buildTicketCard(
                         context,
                         eventId: ticket['event_id'],
@@ -139,13 +139,13 @@ class TicketView extends GetView<TicketController> {
                   }).toList(),
                 ],
 
-                const SizedBox(height: 40),
+                SizedBox(height: 40),
               ],
             ),
           ),
         );
       }),
-      bottomNavigationBar: const CustomBottomNavBar(
+      bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 1,
         role: 'user',
       ),
@@ -176,7 +176,7 @@ class TicketView extends GetView<TicketController> {
           BoxShadow(
             color: Colors.blueGrey.withOpacity(0.08),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -185,7 +185,7 @@ class TicketView extends GetView<TicketController> {
         children: [
           // 1. BAGIAN GAMBAR HEADER
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8.0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(18),
               child: Stack(
@@ -220,7 +220,7 @@ class TicketView extends GetView<TicketController> {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
@@ -230,7 +230,7 @@ class TicketView extends GetView<TicketController> {
                       ),
                       child: Text(
                         isActive ? 'UPCOMING' : 'COMPLETED',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -246,7 +246,7 @@ class TicketView extends GetView<TicketController> {
 
           // 2. BAGIAN DETAIL TIKET
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -257,7 +257,7 @@ class TicketView extends GetView<TicketController> {
                     Expanded(
                       child: Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 20,
                           color: Color(0xFF1E293B),
@@ -267,13 +267,13 @@ class TicketView extends GetView<TicketController> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     // TINGGAL MENGIRIM PARAMETER KE CONTROLLER AGAR TIDAK ERROR
                     InkWell(
                       onTap: () => controller.popUp(ticketCode, title),
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.blue[50],
                           borderRadius: BorderRadius.circular(10),
@@ -287,7 +287,7 @@ class TicketView extends GetView<TicketController> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 15),
+                SizedBox(height: 15),
 
                 // Info Speaker
                 Row(
@@ -297,7 +297,7 @@ class TicketView extends GetView<TicketController> {
                       size: 18,
                       color: Colors.grey[500],
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       speaker,
                       style: TextStyle(
@@ -308,7 +308,7 @@ class TicketView extends GetView<TicketController> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
 
                 // Info Jadwal
                 Row(
@@ -318,13 +318,13 @@ class TicketView extends GetView<TicketController> {
                       size: 16,
                       color: Colors.grey[400],
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       date,
                       style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
                       child: Text(
                         '|',
                         style: TextStyle(color: Colors.grey[300]),
@@ -337,7 +337,7 @@ class TicketView extends GetView<TicketController> {
                   ],
                 ),
 
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 15.0),
                   child: Divider(height: 1, thickness: 1),
                 ),
@@ -350,12 +350,12 @@ class TicketView extends GetView<TicketController> {
                     child: ElevatedButton.icon(
                       onPressed: () =>
                           controller.goToLive(eventId, title, speaker),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.live_tv_rounded,
                         color: Colors.white,
                         size: 20,
                       ),
-                      label: const Text(
+                      label: Text(
                         'Gabung Ruang Live',
                         style: TextStyle(
                           color: Colors.white,
@@ -392,7 +392,7 @@ class TicketView extends GetView<TicketController> {
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: EdgeInsets.symmetric(vertical: 12),
                             side: BorderSide(color: Colors.blue.shade200),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -400,16 +400,16 @@ class TicketView extends GetView<TicketController> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => print("Download Summary"),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.picture_as_pdf_rounded,
                             size: 18,
                             color: Colors.white,
                           ),
-                          label: const Text(
+                          label: Text(
                             "Ringkasan",
                             style: TextStyle(
                               fontSize: 13,
@@ -420,7 +420,7 @@ class TicketView extends GetView<TicketController> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange[600],
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

@@ -26,7 +26,6 @@ abstract class Routes {
   static const QR_SCANNER = _Paths.QR_SCANNER;
   static const PAYMENT = _Paths.PAYMENT;
   static const FACEREGISTRATION = _Paths.FACEREGISTRATION;
-  static const FACESCANNER = _Paths.FACESCANNER;
   static const AUTH_SPLASH = _Paths.AUTH_SPLASH;
   static const AUTH_VERIFY_OTP = _Paths.AUTH_VERIFY_OTP;
   static const SCAN_PAGE = _Paths.SCAN_PAGE;
@@ -58,7 +57,6 @@ abstract class _Paths {
   static const QR_SCANNER = '/qr-scanner';
   static const PAYMENT = '/payment';
   static const FACEREGISTRATION = '/faceregistration';
-  static const FACESCANNER = '/facescanner';
   static const AUTH_SPLASH = '/splash';
   static const AUTH_VERIFY_OTP = '/verify-otp';
   static const SCAN_PAGE = '/scan-page';

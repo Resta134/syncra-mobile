@@ -33,17 +33,21 @@ class FaceVertivicationController extends GetxController {
 
   int stableFrame = 0;
   static const int requiredStableFrame = 8;
-  
-  String eventName = 'Syncra Event'; 
+
+  String eventName = 'Syncra Event';
 
   @override
   void onInit() {
     super.onInit();
-    
+
     if (Get.arguments != null) {
-      eventName = Get.arguments['title'] ?? Get.arguments['nama_event'] ?? Get.arguments['name'] ?? 'Syncra Event';
+      eventName =
+          Get.arguments['title'] ??
+          Get.arguments['nama_event'] ??
+          Get.arguments['name'] ??
+          'Syncra Event';
     }
-    
+
     _initialize();
   }
 
@@ -58,7 +62,12 @@ class FaceVertivicationController extends GetxController {
     interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite');
     faceService = FaceService(interpreter: interpreter, supabase: supabase);
 
-    await faceService.loadRegisteredUsers();
+    print("➡️ Sebelum loadRegisteredUsers()");
+
+    await faceService.loadRegisteredUsers(eventName: eventName);
+
+    print("✅ Sesudah loadRegisteredUsers()");
+
     await _initializeCamera();
 
     print("✅ [Controller Ready] Pemindai siap digunakan.");
@@ -150,52 +159,55 @@ class FaceVertivicationController extends GetxController {
   }
 
   Future<void> _doFaceVerification(CameraImage image, Face face) async {
-  if (isVerifying) return; // Mencegah proses ganda
-  isVerifying = true; // Kunci proses
+    if (isVerifying) return; // Mencegah proses ganda
+    isVerifying = true; // Kunci proses
 
-  try {
-    final result = await faceService.verifyFace(image, face);
+    try {
+      final result = await faceService.verifyFace(image, face);
 
-    if (result != null) {
-      statusText.value = "Mencatat kehadiran...";
-      
-      // Stop stream SEBELUM menyimpan agar tidak ada deteksi ganda di latar belakang
-      await cameraController?.stopImageStream();
-      
-      try {
-        final now = DateTime.now();
-        final jamSekarang = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
+      if (result != null) {
+        statusText.value = "Mencatat kehadiran...";
 
-        // Tambahkan pengecekan atau gunakan upsert jika ingin mengizinkan update
-        await supabase.from('attendance').insert({
-          'event_name': eventName,
-          'user_id': result.id,
-          'full_name': result.name, 
-          'waktu_checkin': jamSekarang, 
-        });
-        
-        print("✅ [Database] Kehadiran a.n ${result.name} berhasil disimpan!");
-      } catch (dbError) {
-        print("⚠️ [Database Error]: $dbError");
-        // Jika error karena sudah absen, tetap tampilkan pop-up sukses/info
+        // Stop stream SEBELUM menyimpan agar tidak ada deteksi ganda di latar belakang
+        await cameraController?.stopImageStream();
+
+        try {
+          final now = DateTime.now();
+          final jamSekarang =
+              "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
+
+          await supabase.from('attendance').insert({
+            'event_name': eventName,
+            'user_id': result.id,
+            'full_name': result.name,
+            'waktu_checkin': jamSekarang,
+          });
+
+          print("✅ [Database] Kehadiran a.n ${result.name} berhasil disimpan!");
+
+          // PERUBAHAN: Eliminasi user dari list RAM agar tidak bisa absen double / mengganggu akurasi
+          faceService.removeUserFromMemory(result.id);
+        } catch (dbError) {
+          print("⚠️ [Database Error]: $dbError");
+        }
+
+        statusText.value = "Verifikasi Berhasil!";
+        _showSuccessPopup(result.name);
+        return; // Keluar dari fungsi setelah sukses
       }
 
-      statusText.value = "Verifikasi Berhasil!";
-      _showSuccessPopup(result.name);
-      return; // Keluar dari fungsi setelah sukses
+      // Jika hasil null (tidak dikenali)
+      statusText.value = "Wajah tidak dikenali";
+      await Future.delayed(const Duration(milliseconds: 1200));
+      statusText.value = "Posisikan wajah di dalam bingkai";
+      stableFrame = 0;
+      isVerifying = false; // Buka kunci agar bisa memindai lagi
+    } catch (e) {
+      print("❌ [Verification Error] $e");
+      isVerifying = false;
     }
-
-    // Jika hasil null (tidak dikenali)
-    statusText.value = "Wajah tidak dikenali";
-    await Future.delayed(const Duration(milliseconds: 1200));
-    statusText.value = "Posisikan wajah di dalam bingkai";
-    stableFrame = 0;
-    isVerifying = false; // Buka kunci agar bisa memindai lagi
-  } catch (e) {
-    print("❌ [Verification Error] $e");
-    isVerifying = false;
   }
-}
+
   // =========================================================
   // UX UPGRADE: POP-UP SUKSES MODERN (DARK GLASSMORPHISM)
   // =========================================================
@@ -234,10 +246,7 @@ class FaceVertivicationController extends GetxController {
           Text(
             "Kehadiran Anda pada '$eventName' telah tercatat.",
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white60,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -251,17 +260,19 @@ class FaceVertivicationController extends GetxController {
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () async {
-                Get.back(); // Tutup Pop-up
+                Get.back(); // 1. Tutup Dialog
 
-                await Future.delayed(const Duration(milliseconds: 500));
+                await Future.delayed(const Duration(milliseconds: 300));
 
+                // 2. Reset Status & Counter
                 statusText.value = "Posisikan wajah di dalam bingkai";
                 stableFrame = 0;
                 isVerifying = false;
                 isDetecting = false;
 
-                // Nyalakan kembali stream kamera secara aman
-                if (cameraController != null && !cameraController!.value.isStreamingImages) {
+                // 3. Restart Stream Kamera (jika tadi dimatikan)
+                if (cameraController != null &&
+                    !cameraController!.value.isStreamingImages) {
                   await cameraController!.startImageStream((image) {
                     if (!isCameraInitialized.value) return;
                     _doFaceDetection(image);

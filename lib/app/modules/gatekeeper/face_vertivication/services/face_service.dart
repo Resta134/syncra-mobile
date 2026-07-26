@@ -16,111 +16,213 @@ class FaceService {
 
   List<Map<String, dynamic>> registeredUsers = [];
 
-  /// ===============================
-  /// LOAD SEMUA WAJAH DARI DATABASE
-  /// ===============================
-  // Di dalam FaceService.dart, perbarui cara load registered users
-Future<void> loadRegisteredUsers() async {
-  final response = await supabase
-      .from('profiles')
-      .select('id, full_name, face_vector')
-      .not('face_vector', 'is', null);
+  /// 1. LOAD WAJAH (Kecuali yang sudah absen di event saat ini)
+  Future<void> loadRegisteredUsers({String? eventName}) async {
+    try {
+      print("======================================");
+      print("🚀 LOAD REGISTERED USERS DIMULAI");
+      print("📌 Event : $eventName");
 
-  registeredUsers = (response as List).map((user) {
-    List<double> vector;
-    if (user['face_vector'] is String) {
-      vector = (user['face_vector'] as String)
-          .replaceAll('[', '').replaceAll(']', '')
-          .split(',').map((e) => double.parse(e.trim())).toList();
-    } else {
-      vector = (user['face_vector'] as List)
-          .map((e) => (e as num).toDouble()).toList();
+      // ================================
+      // Ambil semua profile yang punya face_vector
+      // ================================
+      final response = await supabase
+          .from('profiles')
+          .select('id, full_name, face_vector')
+          .not('face_vector', 'is', null);
+
+      print("========== RESPONSE DARI DB ==========");
+      print(response);
+      print("Jumlah profile dari DB : ${(response as List).length}");
+      print("======================================");
+
+      // ================================
+      // Ambil daftar user yang sudah check-in
+      // ================================
+      List<String> alreadyCheckedInIds = [];
+
+      if (eventName != null) {
+        final attendanceRes = await supabase
+            .from('attendance')
+            .select('user_id')
+            .eq('event_name', eventName);
+
+        alreadyCheckedInIds = (attendanceRes as List)
+            .map((e) => e['user_id'].toString())
+            .toList();
+
+        print("User yang sudah check-in:");
+        print(alreadyCheckedInIds);
+      }
+
+      // ================================
+      // Filter user
+      // ================================
+      registeredUsers = (response)
+          .where((user) => !alreadyCheckedInIds.contains(user['id'].toString()))
+          .map((user) {
+            List<double> vector;
+
+            if (user['face_vector'] is String) {
+              vector = (user['face_vector'] as String)
+                  .replaceAll('[', '')
+                  .replaceAll(']', '')
+                  .split(',')
+                  .map((e) => double.parse(e.trim()))
+                  .toList();
+            } else {
+              vector = (user['face_vector'] as List)
+                  .map((e) => (e as num).toDouble())
+                  .toList();
+            }
+
+            print("✅ ${user['full_name']} | Vector Length : ${vector.length}");
+
+            return {
+              'id': user['id'].toString(),
+              'full_name': user['full_name'],
+              'face_vector': SimilarityHelper.normalizeEmbedding(vector),
+            };
+          })
+          .toList();
+
+      print("========== REGISTERED USERS ==========");
+
+      for (final user in registeredUsers) {
+        print("${user['full_name']} (${user['id']})");
+      }
+
+      print("======================================");
+
+      print("🎯 [FaceService] Siap memindai ${registeredUsers.length} orang.");
+    } catch (e, stackTrace) {
+      print("❌ ERROR loadRegisteredUsers()");
+      print(e);
+      print(stackTrace);
     }
-    
-    // PENTING: Normalisasi saat load agar sama dengan liveVector
-    return {
-      'id': user['id'],
-      'full_name': user['full_name'],
-      'face_vector': SimilarityHelper.normalizeEmbedding(vector) 
-    };
-  }).toList();
-} 
+  }
+
+  //
+  /// 2. ELIMINASI INSTAN DARI RAM (Dianjurkan dipanggil setelah insert DB berhasil)
+  void removeUserFromMemory(String userId) {
+    registeredUsers.removeWhere((user) => user['id'] == userId);
+    print(
+      "[Eliminasi] User ID $userId telah dihapus dari antrean scan RAM. Sisa: ${registeredUsers.length} orang.",
+    );
+  }
 
   /// ===============================
   /// VERIFIKASI WAJAH (NO CHANGE LOGIC)
   /// ===============================
-  Future<MatchResult?> verifyFace(CameraImage rawImage, Face face) async {
-    
-    img.Image? image = ImageHelper.cameraImageToImage(rawImage);
+  Future<MatchResult?> verifyFace(
+  CameraImage rawImage,
+  Face face,
+) async {
+  img.Image? image = ImageHelper.cameraImageToImage(rawImage);
 
-    if (image == null) return null;
+  if (image == null) return null;
 
-    //--------------------------------
-    // Crop wajah
-    //--------------------------------
-    Rect rect = face.boundingBox;
+  // ============================
+  // Crop wajah
+  // ============================
 
-    int x = rect.left.toInt().clamp(0, image.width - 1);
-    int y = rect.top.toInt().clamp(0, image.height - 1);
-    int w = rect.width.toInt().clamp(0, image.width - x);
-    int h = rect.height.toInt().clamp(0, image.height - y);
+  final rect = face.boundingBox;
 
-    img.Image crop = img.copyCrop(image, x: x, y: y, width: w, height: h);
+  final x = (rect.left - 10).toInt().clamp(0, image.width - 1);
+  final y = (rect.top - 10).toInt().clamp(0, image.height - 1);
+  final w =
+      (rect.width + 20).toInt().clamp(0, image.width - x);
+  final h =
+      (rect.height + 20).toInt().clamp(0, image.height - y);
 
-    crop = img.copyResize(
-      crop,
-      width: 112,
-      height: 112,
-      interpolation: img.Interpolation.linear,
+  img.Image crop = img.copyCrop(
+    image,
+    x: x,
+    y: y,
+    width: w,
+    height: h,
+  );
+
+  crop = img.copyResize(
+    crop,
+    width: 112,
+    height: 112,
+    interpolation: img.Interpolation.linear,
+  );
+
+  // ============================
+  // Inference (HANYA SEKALI)
+  // ============================
+
+  final input = ImageHelper.imageToInput(crop);
+
+  final embeddingSize =
+      interpreter.getOutputTensor(0).shape[1];
+
+  final output = List.generate(
+    1,
+    (_) => List.filled(embeddingSize, 0.0),
+  );
+
+  interpreter.run(input, output);
+
+  final liveVector =
+      SimilarityHelper.normalizeEmbedding(output[0]);
+
+  print("========== LIVE VECTOR ==========");
+  print(output[0].take(10).toList());
+
+  print("========== NORMALIZED ==========");
+  print(liveVector.take(10).toList());
+
+  // ============================
+  // Compare
+  // ============================
+
+  double bestScore = -1;
+
+  String? bestId;
+  String? bestName;
+
+  for (final user in registeredUsers) {
+    final dbVector =
+        user['face_vector'] as List<double>;
+
+    final score = SimilarityHelper.cosineSimilarity(
+      liveVector,
+      dbVector,
     );
 
-    //--------------------------------
-    // Inference
-    //--------------------------------
-    var input = ImageHelper.imageToInput(crop);
-    int embeddingSize = interpreter.getOutputTensor(0).shape[1];
+    print(
+      "${user['full_name']} -> ${score.toStringAsFixed(4)}",
+    );
 
-    var output = List.generate(1, (_) => List.filled(embeddingSize, 0.0));
-
-    interpreter.run(input, output);
-
-    List<double> liveVector = SimilarityHelper.normalizeEmbedding(output[0]);
-
-    //--------------------------------
-    // Compare ke database
-    //--------------------------------
-  
-    double bestScore = -1;
-    String? bestName;
-    String? bestId;
-    // Gunakan 0.10 sebagai batas toleransi, 
-    // tapi pastikan di bawah ini kita cek apakah bestScore mencapai threshold
-    const double minThreshold = 0.10; 
-
-    for (final user in registeredUsers) {
-      List<double> dbVector = user['face_vector'] as List<double>; 
-      double score = SimilarityHelper.cosineSimilarity(liveVector, dbVector);
-      
-      print("${user['full_name']} -> ${score.toStringAsFixed(4)}");
-
-      // 1. Jika sangat mirip (Early Exit)
-      if (score >= 0.85) { 
-        return MatchResult(id: user['id'].toString(), name: user['full_name'], score: score);
-      }
-
-      // 2. Simpan kandidat jika memenuhi threshold
-      if (score >= minThreshold && score > bestScore) {
-        bestScore = score;
-        bestName = user['full_name'];
-        bestId = user['id'].toString();
-      }
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = user['id'].toString();
+      bestName = user['full_name'];
     }
+  }
 
-    // PENTING: Hanya return jika bestScore memenuhi syarat
-    if (bestId != null && bestScore >= minThreshold) {
-      return MatchResult(id: bestId, name: bestName!, score: bestScore);
-    }
-    
-    // Jika tidak ada yang memenuhi threshold, kembalikan null
+  print("==================================");
+  print("BEST : $bestName");
+  print("SCORE : $bestScore");
+  print("==================================");
+
+  const threshold = 0.20;
+
+  if (bestId == null) {
     return null;
-    }}
+  }
+
+  if (bestScore < threshold) {
+    return null;
+  }
+
+  return MatchResult(
+    id: bestId,
+    name: bestName!,
+    score: bestScore,
+  );
+}
+}

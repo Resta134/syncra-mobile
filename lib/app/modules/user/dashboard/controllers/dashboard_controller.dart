@@ -16,6 +16,9 @@ class DashboardController extends GetxController {
     // Tarik data event otomatis saat halaman beranda dibuka
     fetchEvents();
   }
+  void testing(){
+    Get.toNamed('/profil');
+  }
 
   Future<void> fetchEvents() async {
     try {

@@ -64,13 +64,25 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                 ],
               ),
-              child: IconButton(
-                onPressed: () => controller.goToNotifikasi(),
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: Color(0xFF1E293B),
-                  size: 22,
-                ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => controller.goToNotifikasi(),
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Color(0xFF1E293B),
+                      size: 22,
+                    ),
+                  ),
+                  // IconButton(
+                  //   onPressed: () => controller.testing(),
+                  //   icon: const Icon(
+                  //     Icons.notifications_outlined,
+                  //     color: Color.fromARGB(255, 0, 98, 255),
+                  //     size: 22,
+                  //   ),
+                  // ),
+                ],
               ),
             ),
           ),
