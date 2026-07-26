@@ -71,13 +71,46 @@ class LoginView extends GetView<LoginController> {
                 // ==========================================
                 // 4. INPUT PASSWORD
                 // ==========================================
-                _buildSoftShadowTextField(
-                  controller: controller.passC,
-                  hintText: 'login_password_hint'.tr,
-                  icon: Icons.lock_outline,
-                  isPassword: true,
+                Obx(
+                  () => _buildSoftShadowTextField(
+                    controller: controller.passC,
+                    hintText: 'login_password_hint'.tr,
+                    icon: Icons.lock_outline,
+                    obscureState: controller.isPasswordHidden,
+                    onToggleVisibility: () => controller.togglePasswordVisibility(),
+                    onChanged: (val) => controller.checkPassword(val),
+                  ),
                 ),
                 const SizedBox(height: 10),
+                Obx(
+                  () => Row(
+                    children: [
+                      const SizedBox(width: 5),
+                      Icon(
+                        controller.isPasswordValid.value
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        size: 16,
+                        color: controller.isPasswordValid.value
+                            ? Colors.blueAccent
+                            : Colors.grey[400],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Minimal 6 karakter*",
+                        style: TextStyle(
+                          color: controller.isPasswordValid.value
+                              ? Colors.blueAccent
+                              : Colors.grey[500],
+                          fontSize: 13,
+                          fontWeight: controller.isPasswordValid.value
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 Align(
                   alignment: Alignment.centerRight,
@@ -94,6 +127,7 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ),
                 const SizedBox(height: 15),
+                
 
                 // ==========================================
                 // 6. TOMBOL MASUK UTAMA
@@ -182,7 +216,10 @@ class LoginView extends GetView<LoginController> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('assets/images/googleSymbol.png', height: 24),
+                        Image.asset(
+                          'assets/images/googleSymbol.png',
+                          height: 24,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           'login_google_btn'.tr,
@@ -240,7 +277,13 @@ class LoginView extends GetView<LoginController> {
     required IconData icon,
     bool isPassword = false,
     TextInputType inputType = TextInputType.text,
+    // --- TAMBAHAN PARAMETER BARU ---
+    RxBool? obscureState,
+    void Function()? onToggleVisibility,
+    Function(String)? onChanged,
   }) {
+    final isObscured = obscureState != null ? obscureState.value : isPassword;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -256,8 +299,9 @@ class LoginView extends GetView<LoginController> {
       ),
       child: TextFormField(
         controller: controller,
-        obscureText: isPassword,
+        obscureText: isObscured,
         keyboardType: inputType,
+        onChanged: onChanged, // --- HUBUNGKAN KE FUNGSI ONCHANGED ---
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
@@ -265,6 +309,22 @@ class LoginView extends GetView<LoginController> {
             padding: const EdgeInsets.only(left: 15, right: 10),
             child: Icon(icon, color: Colors.blue[300], size: 22),
           ),
+          // --- TAMBAHAN SUFFIX IKON MATA ---
+          suffixIcon: obscureState != null
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: IconButton(
+                    icon: Icon(
+                      obscureState.value
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.blue[300],
+                      size: 22,
+                    ),
+                    onPressed: onToggleVisibility,
+                  ),
+                )
+              : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,

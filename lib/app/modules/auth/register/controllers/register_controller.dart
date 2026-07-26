@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart'
 
 class RegisterController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final isPasswordHidden = true.obs;
 
   // Controller untuk mengambil teks dari form
   final nameC = TextEditingController();
@@ -14,6 +15,21 @@ class RegisterController extends GetxController {
 
   // State untuk animasi loading pada tombol
   var isLoading = false.obs;
+  
+  // NEW YE ===================================
+  void togglePasswordVisibility() {
+    isPasswordHidden.value = !isPasswordHidden.value;
+  }
+
+  final isPasswordValid = false.obs;
+  void checkPassword(String value) {
+    if (value.length >= 6) {
+      isPasswordValid.value = true;
+    } else {
+      isPasswordValid.value = false;
+    }
+  }
+  //==========================================================
 
   // ========================================================
   // 1. REGISTRASI MANUAL DENGAN EMAIL & PASSWORD (OTP)
@@ -74,6 +90,8 @@ class RegisterController extends GetxController {
         nameC.clear();
         emailC.clear();
         passC.clear();
+        // NEW CIK
+        isPasswordValid.value = false;
       }
     } on AuthException catch (e) {
       Get.snackbar(

@@ -458,4 +458,5 @@ class ProfilView extends GetView<ProfilController> {
       ),
     );
   }
+
 }

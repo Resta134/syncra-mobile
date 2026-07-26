@@ -21,8 +21,8 @@ class RegisterView extends GetView<RegisterController> {
                 // 1. AREA LOGO SYNCRA
                 // ==========================================
                 Image.asset(
-                  'assets/images/logo_syncro.png', 
-                  height: 80, 
+                  'assets/images/logo_syncro.png',
+                  height: 80,
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 80,
                     width: 80,
@@ -82,20 +82,59 @@ class RegisterView extends GetView<RegisterController> {
                 // ==========================================
                 // 5. INPUT PASSWORD
                 // ==========================================
-                _buildSoftShadowTextField(
-                  controller: controller.passC,
-                  hintText: 'login_password_hint'.tr,
-                  icon: Icons.lock_outline,
-                  isPassword: true,
+                Obx(
+                  () => _buildSoftShadowTextField(
+                    controller: controller.passC,
+                    hintText: 'login_password_hint'.tr,
+                    icon: Icons.lock_outline,
+                    // Hubungkan dengan state & fungsi dari controller:
+                    obscureState: controller.isPasswordHidden,
+                    onToggleVisibility: () =>
+                        controller.togglePasswordVisibility(),
+                        onChanged: (val) => controller.checkPassword(val),
+                  ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 10),
+                Obx(
+                  () => Row(
+                    children: [
+                      const SizedBox(
+                        width: 5,
+                      ), // Geser sedikit agar sejajar secara visual
+                      Icon(
+                        controller.isPasswordValid.value
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        size: 16,
+                        // Kita gunakan warna Biru untuk Syncro agar cocok dengan desainmu
+                        color: controller.isPasswordValid.value
+                            ? Colors.blueAccent
+                            : Colors.grey[400],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Minimal 6 karakter*", // Atau bisa pakai 'register_pass_hint'.tr jika ada multi-bahasa
+                        style: TextStyle(
+                          color: controller.isPasswordValid.value
+                              ? Colors.blueAccent
+                              : Colors.grey[500],
+                          fontSize: 13,
+                          fontWeight: controller.isPasswordValid.value
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 40,),
 
                 // ==========================================
                 // 6. TOMBOL BUAT AKUN (MANUAL)
                 // ==========================================
                 Obx(
                   () => SizedBox(
-                    width: 180, 
+                    width: 180,
                     height: 50,
                     child: ElevatedButton(
                       onPressed: controller.isLoading.value
@@ -121,10 +160,10 @@ class RegisterView extends GetView<RegisterController> {
                           : Text(
                               'register_btn'.tr,
                               style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
                               ),
                             ),
                     ),
@@ -177,7 +216,10 @@ class RegisterView extends GetView<RegisterController> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('assets/images/googleSymbol.png', height: 24),
+                        Image.asset(
+                          'assets/images/googleSymbol.png',
+                          height: 24,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           'register_google_btn'.tr,
@@ -204,7 +246,7 @@ class RegisterView extends GetView<RegisterController> {
                       style: TextStyle(color: Colors.grey[500], fontSize: 13),
                     ),
                     GestureDetector(
-                      onTap: () => Get.back(), 
+                      onTap: () => Get.back(),
                       child: Text(
                         'register_login_here'.tr,
                         style: const TextStyle(
@@ -234,7 +276,12 @@ class RegisterView extends GetView<RegisterController> {
     required IconData icon,
     bool isPassword = false,
     TextInputType inputType = TextInputType.text,
+    RxBool? obscureState,
+    void Function()? onToggleVisibility,
+    Function(String)? onChanged,
   }) {
+    final isPasswordField = obscureState != null || isPassword;
+    final isObscured = obscureState != null ? obscureState.value : isPassword;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -250,8 +297,9 @@ class RegisterView extends GetView<RegisterController> {
       ),
       child: TextFormField(
         controller: controller,
-        obscureText: isPassword,
+        obscureText: isObscured, // Gunakan status dinamis
         keyboardType: inputType,
+        onChanged: onChanged,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
@@ -259,6 +307,22 @@ class RegisterView extends GetView<RegisterController> {
             padding: const EdgeInsets.only(left: 15, right: 10),
             child: Icon(icon, color: Colors.blue[300], size: 22),
           ),
+          // --- TAMBAHAN SUFFIX ICON (IKON MATA) ---
+          suffixIcon: obscureState != null
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: IconButton(
+                    icon: Icon(
+                      obscureState.value
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.blue[300], // Disesuaikan dengan tema Syncro
+                      size: 22,
+                    ),
+                    onPressed: onToggleVisibility,
+                  ),
+                )
+              : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,

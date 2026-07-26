@@ -510,4 +510,5 @@ class ProfilController extends GetxController {
       onConfirm: () => handleSignOutMobile(),
     );
   }
+
 }

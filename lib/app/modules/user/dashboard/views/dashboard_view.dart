@@ -158,7 +158,7 @@ class DashboardView extends GetView<DashboardController> {
             ),
             const SizedBox(height: 15),
 
-            // --- HEADER: EVENT MENDATANG ---
+            // --- .: EVENT MENDATANG ---
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 20.0,
@@ -309,13 +309,15 @@ class DashboardView extends GetView<DashboardController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  (data['location'] ?? 'Online').toString().toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.blueAccent,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                Expanded(
+                  child: Text(
+                    (data['location'] ?? 'Online').toString().toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
                 const Row(

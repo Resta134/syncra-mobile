@@ -19,6 +19,26 @@ class LoginController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
   var isLoading = false.obs;
 
+  // new CIK
+  // --- 1. TAMBAHAN STATE REAKTIF UNTUK PASSWORD ---
+  final isPasswordHidden = true.obs;
+  final isPasswordValid = false.obs;
+
+  // --- 2. FUNGSI TOGGLE IKON MATA & CEK VALIDASI ---
+  void togglePasswordVisibility() {
+    isPasswordHidden.value = !isPasswordHidden.value;
+  }
+
+  void checkPassword(String value) {
+    if (value.length >= 6) {
+      isPasswordValid.value = true;
+    } else {
+      isPasswordValid.value = false;
+    }
+  }
+
+  //==============================================
+
   @override
   void onInit() {
     super.onInit();
@@ -176,6 +196,9 @@ class LoginController extends GetxController {
         // HANYA BERSIHKAN TEKS JIKA LOGIN SUDAH BENAR-BENAR BERHASIL
         _sharedEmailC.clear();
         _sharedPassC.clear();
+        
+        // newwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+        isPasswordValid.value = false;
 
         _navigateBasedOnRole(userRole);
       }
